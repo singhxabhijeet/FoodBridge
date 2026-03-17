@@ -31,6 +31,10 @@
 
         private String address;
 
+        private String aadhaarNumber;
+
+        private String purpose;
+
         private Double latitude;
 
         private Double longitude;
@@ -120,6 +124,22 @@
 
         public void setAddress(String address) {
             this.address = address;
+        }
+
+        public String getAadhaarNumber() {
+            return aadhaarNumber;
+        }
+
+        public void setAadhaarNumber(String aadhaarNumber) {
+            this.aadhaarNumber = aadhaarNumber;
+        }
+
+        public String getPurpose() {
+            return purpose;
+        }
+
+        public void setPurpose(String purpose) {
+            this.purpose = purpose;
         }
 
         public Double getLatitude() {

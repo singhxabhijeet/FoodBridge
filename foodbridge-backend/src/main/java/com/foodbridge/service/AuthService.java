@@ -42,6 +42,8 @@ public class AuthService {
         user.setRole(Role.valueOf(request.getRole().toUpperCase()));
         user.setOrganization(request.getOrganization());
         user.setAddress(request.getAddress());
+        user.setAadhaarNumber(request.getAadhaarNumber());
+        user.setPurpose(request.getPurpose());
         user.setLatitude(request.getLatitude());
         user.setLongitude(request.getLongitude());
 

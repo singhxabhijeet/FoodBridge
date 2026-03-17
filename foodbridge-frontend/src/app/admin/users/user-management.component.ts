@@ -25,6 +25,8 @@ import { User } from '../../core/models/models';
                 <th>Email</th>
                 <th>Role</th>
                 <th>Organization</th>
+                <th>Aadhaar</th>
+                <th>Purpose</th>
                 <th>Registered</th>
                 <th>Actions</th>
               </tr>
@@ -35,6 +37,8 @@ import { User } from '../../core/models/models';
                 <td>{{ u.email }}</td>
                 <td><span class="badge badge-{{ u.role.toLowerCase() }}">{{ u.role }}</span></td>
                 <td>{{ u.organization }}</td>
+                <td>{{ u.aadhaarNumber }}</td>
+                <td style="max-width:200px; font-size:12px">{{ u.purpose }}</td>
                 <td>{{ u.createdAt | date:'mediumDate' }}</td>
                 <td>
                   <button class="btn btn-primary btn-sm" (click)="approve(u.id)">

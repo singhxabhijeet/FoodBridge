@@ -62,7 +62,7 @@ export const routes: Routes = [
     {
         path: 'receiver',
         canActivate: [roleGuard],
-        data: { role: 'RECEIVER' },
+        data: { role: ['RECEIVER', 'COMPOST_RECEIVER'] },
         children: [
             {
                 path: 'browse',

@@ -51,6 +51,14 @@ public class FoodListingService {
                 "New food listing '" + saved.getFoodName() + "' needs quality review.",
                 "REVIEW_NEEDED");
 
+        // If NON_EDIBLE, also notify COMPOST_RECEIVERs
+        if ("NON_EDIBLE".equals(listing.getFoodType())) {
+            List<User> compostReceivers = userRepository.findByRoleAndApprovedTrue(Role.COMPOST_RECEIVER);
+            notificationService.notifyAllUsersWithRole(compostReceivers,
+                    "Non-edible food '" + saved.getFoodName() + "' posted — available for composting/animal feed.",
+                    "COMPOST_AVAILABLE");
+        }
+
         // Auto-set status to UNDER_REVIEW
         saved.setStatus(ListingStatus.UNDER_REVIEW);
         return listingRepository.save(saved);
@@ -162,6 +170,12 @@ public class FoodListingService {
             notificationService.createNotification(listing.getProvider(),
                     "Your listing '" + listing.getFoodName() + "' has expired without being claimed.",
                     "LISTING_EXPIRED");
+
+            // Notify COMPOST_RECEIVERs about expired food available for composting
+            List<User> compostReceivers = userRepository.findByRoleAndApprovedTrue(Role.COMPOST_RECEIVER);
+            notificationService.notifyAllUsersWithRole(compostReceivers,
+                    "Expired food '" + listing.getFoodName() + "' is now available for composting/animal feed.",
+                    "COMPOST_EXPIRED");
         }
     }
 }

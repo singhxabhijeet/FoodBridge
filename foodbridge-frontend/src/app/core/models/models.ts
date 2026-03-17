@@ -8,6 +8,8 @@ export interface User {
     role: string;
     organization: string;
     address: string;
+    aadhaarNumber: string;
+    purpose: string;
     latitude: number;
     longitude: number;
     approved: boolean;

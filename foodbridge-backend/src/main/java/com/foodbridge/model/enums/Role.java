@@ -4,5 +4,6 @@ public enum Role {
     PROVIDER,
     RECEIVER,
     CHECKER,
-    ADMIN
+    ADMIN,
+    COMPOST_RECEIVER
 }

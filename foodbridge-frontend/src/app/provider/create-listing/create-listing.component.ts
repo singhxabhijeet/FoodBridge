@@ -90,7 +90,7 @@ import { ApiService } from '../../core/services/api.service';
           <div class="form-row">
             <div class="form-group">
               <label>Pickup Start Date *</label>
-              <input type="date" class="form-control" [(ngModel)]="form.pickupStartDate" name="pickupStartDate" required>
+              <input type="date" class="form-control" [(ngModel)]="form.pickupStartDate" name="pickupStartDate" required [min]="todayDate">
             </div>
             <div class="form-group">
               <label>Pickup Start Time *</label>
@@ -115,7 +115,7 @@ import { ApiService } from '../../core/services/api.service';
           <div class="form-row">
             <div class="form-group">
               <label>Pickup End Date *</label>
-              <input type="date" class="form-control" [(ngModel)]="form.pickupEndDate" name="pickupEndDate" required>
+              <input type="date" class="form-control" [(ngModel)]="form.pickupEndDate" name="pickupEndDate" required [min]="todayDate">
             </div>
             <div class="form-group">
               <label>Pickup End Time *</label>
@@ -171,6 +171,7 @@ import { ApiService } from '../../core/services/api.service';
 export class CreateListingComponent {
   hours = ['12', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11'];
   minutes = ['00', '15', '30', '45'];
+  todayDate = new Date().toISOString().split('T')[0];
 
   form = {
     foodName: '',
@@ -228,6 +229,24 @@ export class CreateListingComponent {
 
     const pickupWindowStart = `${this.form.pickupStartDate}T${this.to24h(this.form.startHour, this.form.startMinute, this.form.startPeriod)}`;
     const pickupWindowEnd = `${this.form.pickupEndDate}T${this.to24h(this.form.endHour, this.form.endMinute, this.form.endPeriod)}`;
+
+    // Validate: cannot be in the past
+    const now = new Date();
+    if (new Date(pickupWindowStart) < now) {
+      this.error = 'Pickup start date/time cannot be in the past.';
+      this.loading = false;
+      return;
+    }
+    if (new Date(pickupWindowEnd) < now) {
+      this.error = 'Pickup end date/time cannot be in the past.';
+      this.loading = false;
+      return;
+    }
+    if (new Date(pickupWindowEnd) <= new Date(pickupWindowStart)) {
+      this.error = 'Pickup end must be after the start.';
+      this.loading = false;
+      return;
+    }
 
     const formData = new FormData();
     formData.append('foodName', this.form.foodName);

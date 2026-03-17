@@ -7,9 +7,11 @@ public class RegisterRequest {
     private String email;
     private String password;
     private String phone;
-    private String role; // PROVIDER, RECEIVER, CHECKER
+    private String role; // PROVIDER, RECEIVER, CHECKER, COMPOST_RECEIVER
     private String organization;
     private String address;
+    private String aadhaarNumber;
+    private String purpose;
     private Double latitude;
     private Double longitude;
 
@@ -68,6 +70,22 @@ public class RegisterRequest {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getAadhaarNumber() {
+        return aadhaarNumber;
+    }
+
+    public void setAadhaarNumber(String aadhaarNumber) {
+        this.aadhaarNumber = aadhaarNumber;
+    }
+
+    public String getPurpose() {
+        return purpose;
+    }
+
+    public void setPurpose(String purpose) {
+        this.purpose = purpose;
     }
 
     public Double getLatitude() {

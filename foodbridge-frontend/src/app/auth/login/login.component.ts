@@ -114,6 +114,7 @@ export class LoginComponent {
                 switch (res.role) {
                     case 'PROVIDER': this.router.navigate(['/provider/dashboard']); break;
                     case 'RECEIVER': this.router.navigate(['/receiver/browse']); break;
+                    case 'COMPOST_RECEIVER': this.router.navigate(['/receiver/browse']); break;
                     case 'CHECKER': this.router.navigate(['/checker/review-queue']); break;
                     case 'ADMIN': this.router.navigate(['/admin/dashboard']); break;
                     default: this.router.navigate(['/impact']);

@@ -62,6 +62,16 @@ import { ApiService } from '../../core/services/api.service';
             </a>
           </ng-container>
 
+          <!-- Compost Receiver Links -->
+          <ng-container *ngIf="auth.hasRole('COMPOST_RECEIVER')">
+            <a routerLink="/receiver/browse" routerLinkActive="active" class="nav-link">
+              <i class="fas fa-recycle"></i> Browse Compostable
+            </a>
+            <a routerLink="/receiver/my-claims" routerLinkActive="active" class="nav-link">
+              <i class="fas fa-hand-holding-heart"></i> My Claims
+            </a>
+          </ng-container>
+
           <!-- Admin Links -->
           <ng-container *ngIf="auth.hasRole('ADMIN')">
             <a routerLink="/admin/dashboard" routerLinkActive="active" class="nav-link">
