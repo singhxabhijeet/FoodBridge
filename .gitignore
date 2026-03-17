@@ -1,0 +1,31 @@
+# Visual Studio Code
+.vscode/
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Maven
+foodbridge-backend/target/
+foodbridge-backend/pom.xml.tag
+foodbridge-backend/pom.xml.releaseBackup
+foodbridge-backend/pom.xml.versionsBackup
+foodbridge-backend/pom.xml.next
+foodbridge-backend/release.properties
+foodbridge-backend/dependency-reduced-pom.xml
+foodbridge-backend/buildNumber.properties
+foodbridge-backend/.mvn/timing.properties
+foodbridge-backend/.mvn/wrapper/maven-wrapper.jar
+
+# Angular / Node
+foodbridge-frontend/node_modules/
+foodbridge-frontend/dist/
+foodbridge-frontend/.angular/
+foodbridge-frontend/coverage/
+
+# Misc
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,112 @@
+=========================================================
+FOODBRIDGE - PROJECT CHEAT SHEET & ARCHITECTURE GUIDE
+=========================================================
+
+1. PROJECT OVERVIEW
+-------------------
+FoodBridge is a full-stack, enterprise-grade web application built to facilitate the redistribution of surplus food from providers (e.g., restaurants, hotels) to those in need, ensuring quality and safety.
+
+Technology Stack:
+- Backend: Java 17, Spring Boot 3.2, Spring Security (JWT), Spring Data JPA, Hibernate
+- Database: MySQL (Database name: foodbridge_db)
+- Frontend: Angular 17 (Standalone Components), HTML5, CSS3, TypeScript
+
+2. USER ROLES & CORE WORKFLOW
+-----------------------------
+The system is built around 4 distinct user roles:
+1. PROVIDER: Registers, gets approved by admin, posts food listings with photos and safety checklists.
+2. QUALITY CHECKER: Reviews new food listings and either approves or rejects them based on safety/quality.
+3. RECEIVER: Browses approved listings nearby, claims food, schedules pickups.
+4. ADMIN: Manages users (approves registrations, restricts no-shows) and monitors system statistics.
+
+Core Lifecycle of Food:
+[POSTED by Provider] -> [UNDER_REVIEW by Checker] -> [APPROVED if safe] -> [CLAIMED by Receiver] -> [CONFIRMED when picked up by both parties]
+Note: If no one claims it and the pickup window closes, a backend scheduler automatically marks it [EXPIRED].
+
+3. BACKEND ARCHITECTURE (Spring Boot)
+-------------------------------------
+Directory: /foodbridge-backend/src/main/java/com/foodbridge/
+
+A. Domain Models (Entities) - /model/
+   - User.java: Represents all 4 user types. Contains role, approval status, noShowCount, geolocation.
+   - FoodListing.java: The core entity. Contains food details, perishability, pickup windows, photos, and current Status (enum).
+   - QualityCheck.java: Links a FoodListing to a Checker who approved/rejected it.
+   - Claim.java: Links a FoodListing to a Receiver. Tracks providerConfirmed and receiverConfirmed booleans.
+   - Rating.java: 1-to-5 star rating system (Receiver rates Provider after confirmation).
+   - Notification.java: System alerts sent to users (e.g., "Food Approved", "Action Required").
+
+B. Data Access Layer (Repositories) - /repository/
+   - Standard Spring Data JPA interfaces (e.g., UserRepository, FoodListingRepository). They use method-name queries (e.g., findByStatusAndPickupWindowEndBefore) to fetch data without writing raw SQL.
+
+C. Business Logic (Services) - /service/
+   - AuthService.java: Handles user registration, password hashing (BCrypt), and JWT token generation.
+   - FoodListingService.java: Handles creating listings, setting initial status to UNDER_REVIEW, uploading photos, and fetching listings based on user roles and geolocation (bounding box calculation).
+   - QualityCheckService.java: Logic for a Checker to approve/reject. Sends notifications to the Provider.
+   - ClaimService.java: Logic for receivers to claim food. Handles the 2-sided confirmation puzzle. If a user "no-shows" 3 times, it automatically restricts their account.
+   - AdminService.java: Aggregates system-wide statistics for the admin dashboard (e.g., total food saved).
+   - ReportService.java: Generates downloadable CSV reports for Providers so they can track their monthly food donations.
+
+D. Scheduled Tasks (Cron Jobs) - /scheduler/
+   - ListingExpiryScheduler.java: Runs every 15 minutes (@Scheduled). Sweeps the database for APPROVED listings where the pickup window has passed and marks them EXPIRED to keep the platform clean.
+
+E. Security Layer - /security/
+   - JwtUtil.java: Creates and validates JSON Web Tokens (JWT). Extracts emails and roles from tokens.
+   - JwtAuthFilter.java: Intercepts every incoming HTTP request. If a valid "Bearer Token" is present, it authenticates the user in the Spring Security Context.
+   - SecurityConfig.java: Defines which endpoints are public (e.g., /api/auth/**, /api/public/**) and which require specific roles (e.g., /api/admin/** requires ADMIN role).
+   - CustomUserDetailsService.java: Loads user data from the database for Spring Security.
+
+F. API Endpoints (Controllers) - /controller/
+   - These classes expose the Service layer logic as RESTful endpoints (GET, POST, PUT, DELETE) that the Angular frontend consumes. E.g., @PostMapping("/api/auth/login").
+
+4. FRONTEND ARCHITECTURE (Angular 17)
+-------------------------------------
+Directory: /foodbridge-frontend/src/app/
+
+A. Core Services & Interceptors - /core/
+   - auth.service.ts: Manages login state (BehaviorSubject), saves JWT to localStorage, handles logout.
+   - api.service.ts: Centralized service using Angular's HttpClient. Contains a method for every backend endpoint.
+   - auth.interceptor.ts: Automatically intercepts all outgoing HTTP requests and injects the JWT token into the Authorization header.
+   - auth.guard.ts: Route guards. Prevents unauthenticated users from seeing dashboards, and prevents Providers from seeing Admin pages (Role Guard).
+   - models.ts: TypeScript interfaces mirroring the Java Backend entities (User, FoodListing, etc.).
+
+B. Routing & App Component
+   - app.routes.ts: Defines the URL paths. Uses lazy loading (loadComponent) to improve performance. Maps URLs to specific components and applies Guards.
+   - app.component.ts: The root component containing the Navbar and the <router-outlet> (where page content loads).
+
+C. Shared UI Components
+   - /shared/navbar/navbar.component.ts: Dynamic navigation bar. Changes links based on the logged-in user's role. Includes a notification bell dropdown that fetches unread notifications.
+
+D. Feature Modules (The Pages)
+   - /auth/: Login and Register pages.
+   - /public/: Impact page (landing page visible to anyone, showing total food saved stats).
+   - /provider/:
+      - Dashboard (overview stats).
+      - Create Listing (Form with photo upload, separate Date/Time dropdowns, safety checklist).
+      - Listing Detail (view specific listing status).
+      - Reports (CSV download button).
+   - /checker/:
+      - Review Queue (list of UNDER_REVIEW food).
+      - Detail (approve/reject form with reason text box).
+   - /receiver/:
+      - Browse (shows APPROVED food, allows claiming a pickup time).
+      - My Claims (shows claimed food, buttons for "Confirm Pickup", star rating form).
+   - /admin/:
+      - Dashboard (8 summary stat cards and a status distribution bar chart).
+      - User Management (Tables to approve pending users or restrict bad actors).
+      - Listing Management (Global view of all platform food).
+
+5. KEY CHALLENGES SOLVED IN THIS CODEBASE
+-----------------------------------------
+- Timezone/Browser Compatibility: Handled by splitting `<input type="time">` into custom dropdowns (Hour/Minute/AM-PM) in Angular, parsed into proper 24h ISO strings before sending to Java.
+- Security: Complete stateless JWT architecture. Only the `/login`, `/register`, and `/impact` endpoints are open. Passwords are never stored in plain text (BCrypt).
+- Accountability: 2-Sided Confirmation system (Provider and Receiver must BOTH click "Confirm" to successfully close the loop). 3-strike policy for "No-Shows".
+- Geography: Simple latitude/longitude bounding box formulas implemented in `FoodListingService.java` to only show food mathematically near the Receiver.
+- Automated Maintenance: Spring `@EnableScheduling` ensures expired food is automatically hidden without any human intervention.
+
+=========================================================
+PREPARING FOR YOUR SUPERVISOR REVIEW:
+- If asked about Security: Talk about JWT tokens, HttpSecurity configuration, and BCrypt.
+- If asked about Architecture: Emphasize "Separation of Concerns" (Controllers handle HTTP, Services handle Business Logic, Repositories handle DB).
+- If asked about Frontend: Mention "Angular 17 Standalone Components", "RxJS Observables for State", and "Lazy Loaded Routing".
+- If asked about Code Quality: Mention the use of Enums for Statuses, DTOs (Data Transfer Objects) to separate database models from API payloads, and unified Interceptors.
+=========================================================
