@@ -47,9 +47,10 @@ public class ClaimController {
      * Provider confirms pickup.
      */
     @PutMapping("/{claimId}/confirm-provider")
-    public ResponseEntity<?> providerConfirm(@PathVariable Long claimId) {
+    public ResponseEntity<?> providerConfirm(@PathVariable Long claimId, Authentication authentication) {
         try {
-            Claim claim = claimService.providerConfirm(claimId);
+            User provider = userService.getUserByEmail(authentication.getName());
+            Claim claim = claimService.providerConfirm(claimId, provider);
             return ResponseEntity.ok(new ApiResponse(true, "Pickup confirmed by provider", claim));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
@@ -60,9 +61,10 @@ public class ClaimController {
      * Receiver confirms pickup.
      */
     @PutMapping("/{claimId}/confirm-receiver")
-    public ResponseEntity<?> receiverConfirm(@PathVariable Long claimId) {
+    public ResponseEntity<?> receiverConfirm(@PathVariable Long claimId, Authentication authentication) {
         try {
-            Claim claim = claimService.receiverConfirm(claimId);
+            User receiver = userService.getUserByEmail(authentication.getName());
+            Claim claim = claimService.receiverConfirm(claimId, receiver);
             return ResponseEntity.ok(new ApiResponse(true, "Pickup confirmed by receiver", claim));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));

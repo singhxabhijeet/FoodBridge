@@ -69,9 +69,13 @@ public class ClaimService {
     /**
      * Provider confirms pickup.
      */
-    public Claim providerConfirm(Long claimId) {
+    public Claim providerConfirm(Long claimId, User provider) {
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new RuntimeException("Claim not found"));
+
+        if (!claim.getListing().getProvider().getId().equals(provider.getId())) {
+            throw new RuntimeException("You can only confirm pickups for your own food listings");
+        }
 
         claim.setProviderConfirmed(true);
 
@@ -90,9 +94,13 @@ public class ClaimService {
     /**
      * Receiver confirms pickup.
      */
-    public Claim receiverConfirm(Long claimId) {
+    public Claim receiverConfirm(Long claimId, User receiver) {
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new RuntimeException("Claim not found"));
+
+        if (!claim.getReceiver().getId().equals(receiver.getId())) {
+            throw new RuntimeException("You can only confirm your own claims");
+        }
 
         claim.setReceiverConfirmed(true);
 
