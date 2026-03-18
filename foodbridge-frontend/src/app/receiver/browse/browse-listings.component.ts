@@ -33,29 +33,39 @@ import { ApiService } from '../../core/services/api.service';
             <p class="listing-provider"><i class="fas fa-store"></i> {{ l.provider?.fullName }} ({{ l.provider?.organization }})</p>
 
             <div class="claim-section" *ngIf="!l.claimed">
-              <label style="font-size: 12px; font-weight: 600; margin-bottom: 6px; display: block">Schedule Pickup</label>
-              <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap">
-                <input type="date" class="form-control" [(ngModel)]="l.pickupDate" [name]="'pdate_' + l.id"
-                       [min]="todayDate" style="font-size: 13px; flex: 1.2; min-width: 130px">
-                <select class="form-control" [(ngModel)]="l.pickupHour" [name]="'phour_' + l.id" style="font-size: 13px; flex: 0.6; min-width: 60px">
-                  <option value="" disabled>HH</option>
-                  <option *ngFor="let h of hours" [value]="h">{{ h }}</option>
-                </select>
-                <span style="font-size: 18px; font-weight: 700; color: #555; line-height: 42px">:</span>
-                <select class="form-control" [(ngModel)]="l.pickupMinute" [name]="'pmin_' + l.id" style="font-size: 13px; flex: 0.6; min-width: 60px">
-                  <option value="" disabled>MM</option>
-                  <option *ngFor="let m of minutes" [value]="m">{{ m }}</option>
-                </select>
-                <select class="form-control" [(ngModel)]="l.pickupPeriod" [name]="'pper_' + l.id" style="font-size: 13px; flex: 0.5; min-width: 60px">
-                  <option value="AM">AM</option>
-                  <option value="PM">PM</option>
-                </select>
+              <label class="section-label">Schedule Pickup</label>
+              
+              <div class="pickup-form">
+                <div class="form-group pickup-group">
+                  <label>Date</label>
+                  <input type="date" class="form-control" [(ngModel)]="l.pickupDate" [name]="'pdate_' + l.id" [min]="todayDate">
+                </div>
+                
+                <div class="form-group pickup-group">
+                  <label>Time</label>
+                  <div class="time-inputs">
+                    <select class="form-control" [(ngModel)]="l.pickupHour" [name]="'phour_' + l.id">
+                      <option value="" disabled>HH</option>
+                      <option *ngFor="let h of hours" [value]="h">{{ h }}</option>
+                    </select>
+                    <span class="colon">:</span>
+                    <select class="form-control" [(ngModel)]="l.pickupMinute" [name]="'pmin_' + l.id">
+                      <option value="" disabled>MM</option>
+                      <option *ngFor="let m of minutes" [value]="m">{{ m }}</option>
+                    </select>
+                    <select class="form-control" [(ngModel)]="l.pickupPeriod" [name]="'pper_' + l.id">
+                      <option value="AM">AM</option>
+                      <option value="PM">PM</option>
+                    </select>
+                  </div>
+                </div>
               </div>
+
               <button class="btn btn-primary btn-sm" style="width:100%" (click)="claim(l)" [disabled]="l.claiming">
                 <i class="fas fa-hand-holding-heart"></i> {{ l.claiming ? 'Claiming...' : 'Claim This Food' }}
               </button>
             </div>
-            <div class="alert alert-success" *ngIf="l.claimed" style="margin-top: 12px; padding: 10px">
+            <div class="alert alert-success" *ngIf="l.claimed" style="margin-top: 16px; padding: 12px; font-size: 13px">
               <i class="fas fa-check-circle"></i> Claimed successfully!
             </div>
           </div>
@@ -78,7 +88,16 @@ import { ApiService } from '../../core/services/api.service';
     .listing-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; font-size: 12px; color: #666; }
     .listing-meta span { display: flex; align-items: center; gap: 4px; }
     .listing-address, .listing-window, .listing-provider { font-size: 12px; color: #888; margin-bottom: 4px; }
-    .claim-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid #f0f0f0; }
+    .claim-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid #f0f0f0; }
+    .section-label { font-size: 13px; font-weight: 700; margin-bottom: 12px; display: block; color: #333; }
+    .pickup-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .pickup-group { margin-bottom: 0; }
+    .pickup-group label { font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 6px; }
+    .pickup-group .form-control { padding: 8px 10px; font-size: 13px; height: 38px; }
+    .time-inputs { display: flex; align-items: center; gap: 6px; }
+    .time-inputs select { flex: 1; min-width: 0; padding-left: 6px; padding-right: 6px; }
+    .colon { font-weight: 700; color: #555; }
+    @media (max-width: 400px) { .pickup-form { grid-template-columns: 1fr; } }
   `]
 })
 export class BrowseListingsComponent implements OnInit {
