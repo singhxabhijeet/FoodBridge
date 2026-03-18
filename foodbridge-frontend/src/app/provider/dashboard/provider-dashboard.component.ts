@@ -149,7 +149,7 @@ export class ProviderDashboardComponent implements OnInit {
             error: (err) => console.error(err)
         });
 
-        const userId = this.auth.currentUserValue?.id;
+        const userId = this.auth.getUserId();
         if (userId) {
             this.api.getUserRatings(userId).subscribe({
                 next: (res) => {
