@@ -19,6 +19,8 @@ public class DashboardStats {
     private double expiryRate;         // expired / total * 100
     private long activeProviders;
     private long activeReceivers;
+    private long activeCheckers;
+    private long activeCompostReceivers;
     private long rejectedListings;
 
     // Getters and Setters
@@ -63,6 +65,12 @@ public class DashboardStats {
 
     public long getActiveReceivers() { return activeReceivers; }
     public void setActiveReceivers(long activeReceivers) { this.activeReceivers = activeReceivers; }
+
+    public long getActiveCheckers() { return activeCheckers; }
+    public void setActiveCheckers(long activeCheckers) { this.activeCheckers = activeCheckers; }
+
+    public long getActiveCompostReceivers() { return activeCompostReceivers; }
+    public void setActiveCompostReceivers(long activeCompostReceivers) { this.activeCompostReceivers = activeCompostReceivers; }
 
     public long getRejectedListings() { return rejectedListings; }
     public void setRejectedListings(long rejectedListings) { this.rejectedListings = rejectedListings; }

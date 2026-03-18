@@ -57,9 +57,9 @@ public class DashboardService {
 
         // Active users by role
         stats.setActiveProviders(userRepository.findByRoleAndApprovedTrue(Role.PROVIDER).size());
-        long receivers = userRepository.findByRoleAndApprovedTrue(Role.RECEIVER).size();
-        long compostReceivers = userRepository.findByRoleAndApprovedTrue(Role.COMPOST_RECEIVER).size();
-        stats.setActiveReceivers(receivers + compostReceivers);
+        stats.setActiveReceivers(userRepository.findByRoleAndApprovedTrue(Role.RECEIVER).size());
+        stats.setActiveCheckers(userRepository.findByRoleAndApprovedTrue(Role.CHECKER).size());
+        stats.setActiveCompostReceivers(userRepository.findByRoleAndApprovedTrue(Role.COMPOST_RECEIVER).size());
 
         // Listings by status breakdown
         Map<String, Long> byStatus = new HashMap<>();

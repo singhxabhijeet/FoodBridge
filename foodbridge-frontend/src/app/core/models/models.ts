@@ -96,6 +96,8 @@ export interface DashboardStats {
     expiryRate: number;
     activeProviders: number;
     activeReceivers: number;
+    activeCheckers: number;
+    activeCompostReceivers: number;
     rejectedListings: number;
 }
 
