@@ -1,7 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
 import { DashboardStats } from '../../core/models/models';
+import { Chart, registerables } from 'chart.js';
+
+Chart.register(...registerables);
 
 @Component({
     selector: 'app-admin-dashboard',
@@ -11,10 +14,8 @@ import { DashboardStats } from '../../core/models/models';
     <div class="admin-wrapper" *ngIf="stats">
       <!-- Top Header -->
       <div class="admin-header">
-        <div>
-          <h1>Dashboard</h1>
-          <small>FoodBridge Admin Control Panel</small>
-        </div>
+        <h1>Dashboard</h1>
+        <small>FoodBridge Admin Control Panel</small>
       </div>
 
       <!-- Info Boxes Row -->
@@ -27,117 +28,131 @@ import { DashboardStats } from '../../core/models/models';
           </div>
         </div>
         <div class="info-box" style="border-left: 4px solid #00a65a">
-          <div class="info-box-icon" style="background: #00a65a"><i class="fas fa-check-circle"></i></div>
+          <div class="info-box-icon" style="background: #00a65a"><i class="fas fa-handshake"></i></div>
           <div class="info-box-content">
-            <span class="info-box-text">Approved</span>
-            <span class="info-box-number">{{ stats.approvedListings }}</span>
+            <span class="info-box-text">Confirmed Pickups</span>
+            <span class="info-box-number">{{ stats.confirmedPickups }}</span>
           </div>
         </div>
         <div class="info-box" style="border-left: 4px solid #f39c12">
-          <div class="info-box-icon" style="background: #f39c12"><i class="fas fa-hand-holding-heart"></i></div>
+          <div class="info-box-icon" style="background: #f39c12"><i class="fas fa-users"></i></div>
           <div class="info-box-content">
-            <span class="info-box-text">Claimed</span>
-            <span class="info-box-number">{{ stats.claimedListings }}</span>
+            <span class="info-box-text">Total Users</span>
+            <span class="info-box-number">{{ stats.totalUsers }}</span>
           </div>
         </div>
         <div class="info-box" style="border-left: 4px solid #dd4b39">
-          <div class="info-box-icon" style="background: #dd4b39"><i class="fas fa-clock"></i></div>
+          <div class="info-box-icon" style="background: #dd4b39"><i class="fas fa-user-clock"></i></div>
           <div class="info-box-content">
-            <span class="info-box-text">Expired</span>
-            <span class="info-box-number">{{ stats.expiredListings }}</span>
+            <span class="info-box-text">Pending Approvals</span>
+            <span class="info-box-number">{{ stats.pendingUsers }}</span>
           </div>
         </div>
       </div>
 
-      <!-- Small Boxes Row -->
+      <!-- Small stat boxes -->
       <div class="small-boxes">
         <div class="small-box bg-teal">
-          <div class="inner">
-            <h3>{{ stats.confirmedPickups }}</h3>
-            <p>Successful Pickups</p>
-          </div>
-          <div class="icon"><i class="fas fa-handshake"></i></div>
-        </div>
-        <div class="small-box bg-green">
           <div class="inner">
             <h3>{{ stats.totalFoodSaved }}</h3>
             <p>Food Saved (units)</p>
           </div>
           <div class="icon"><i class="fas fa-leaf"></i></div>
         </div>
+        <div class="small-box bg-green">
+          <div class="inner">
+            <h3>{{ stats.approvalRate }}%</h3>
+            <p>Approval Rate</p>
+          </div>
+          <div class="icon"><i class="fas fa-check-circle"></i></div>
+        </div>
         <div class="small-box bg-blue">
           <div class="inner">
-            <h3>{{ stats.totalUsers }}</h3>
-            <p>Registered Users</p>
+            <h3>{{ stats.claimSuccessRate }}%</h3>
+            <p>Claim Success Rate</p>
           </div>
-          <div class="icon"><i class="fas fa-users"></i></div>
+          <div class="icon"><i class="fas fa-trophy"></i></div>
         </div>
         <div class="small-box bg-orange">
           <div class="inner">
-            <h3>{{ stats.pendingUsers }}</h3>
-            <p>Pending Approvals</p>
+            <h3>{{ stats.expiryRate }}%</h3>
+            <p>Expiry Rate</p>
           </div>
-          <div class="icon"><i class="fas fa-user-clock"></i></div>
+          <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
         </div>
       </div>
 
-      <!-- Analytics Cards Row -->
-      <div class="analytics-row">
-        <div class="analytics-panel">
-          <div class="panel-heading" style="background: linear-gradient(135deg, #00a65a, #00c853)">
-            <i class="fas fa-chart-pie"></i> Approval Rate
+      <!-- Charts Row -->
+      <div class="charts-row">
+        <!-- Donut Chart: Listing Status -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <h3><i class="fas fa-chart-pie"></i> Listing Status Breakdown</h3>
           </div>
-          <div class="panel-body">
-            <div class="big-number">{{ stats.approvalRate }}%</div>
-            <div class="panel-label">Listings approved out of processed</div>
-            <div class="progress-bar-wrap">
-              <div class="progress-fill" [style.width]="stats.approvalRate + '%'" style="background: #00a65a"></div>
+          <div class="chart-card-body">
+            <canvas #donutChart></canvas>
+          </div>
+          <div class="chart-card-footer">
+            <div class="footer-item">
+              <span class="footer-dot" style="background:#00a65a"></span>
+              Approved: {{ stats.approvedListings }}
+            </div>
+            <div class="footer-item">
+              <span class="footer-dot" style="background:#f39c12"></span>
+              Claimed: {{ stats.claimedListings }}
+            </div>
+            <div class="footer-item">
+              <span class="footer-dot" style="background:#00c0ef"></span>
+              Confirmed: {{ stats.confirmedPickups }}
+            </div>
+            <div class="footer-item">
+              <span class="footer-dot" style="background:#dd4b39"></span>
+              Expired: {{ stats.expiredListings }}
             </div>
           </div>
         </div>
 
-        <div class="analytics-panel">
-          <div class="panel-heading" style="background: linear-gradient(135deg, #3c8dbc, #2196f3)">
-            <i class="fas fa-trophy"></i> Claim Success
+        <!-- Bar Chart: User Roles -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <h3><i class="fas fa-chart-bar"></i> Active Users by Role</h3>
           </div>
-          <div class="panel-body">
-            <div class="big-number">{{ stats.claimSuccessRate }}%</div>
-            <div class="panel-label">Confirmed pickups vs total claims</div>
-            <div class="progress-bar-wrap">
-              <div class="progress-fill" [style.width]="stats.claimSuccessRate + '%'" style="background: #3c8dbc"></div>
+          <div class="chart-card-body">
+            <canvas #barChart></canvas>
+          </div>
+          <div class="chart-card-footer">
+            <div class="footer-item">
+              <strong>{{ stats.activeProviders }}</strong> Providers
+            </div>
+            <div class="footer-item">
+              <strong>{{ stats.activeReceivers }}</strong> Receivers
+            </div>
+            <div class="footer-item">
+              <strong>{{ stats.pendingUsers }}</strong> Pending
             </div>
           </div>
         </div>
+      </div>
 
-        <div class="analytics-panel">
-          <div class="panel-heading" style="background: linear-gradient(135deg, #dd4b39, #e74c3c)">
-            <i class="fas fa-exclamation-triangle"></i> Expiry Rate
+      <!-- Second Charts Row -->
+      <div class="charts-row" style="margin-top: 20px">
+        <!-- Horizontal Bar: Listing Pipeline -->
+        <div class="chart-card" style="flex: 2">
+          <div class="chart-card-header">
+            <h3><i class="fas fa-stream"></i> Listing Pipeline Overview</h3>
           </div>
-          <div class="panel-body">
-            <div class="big-number">{{ stats.expiryRate }}%</div>
-            <div class="panel-label">Listings expired without being claimed</div>
-            <div class="progress-bar-wrap">
-              <div class="progress-fill" [style.width]="stats.expiryRate + '%'" style="background: #dd4b39"></div>
-            </div>
+          <div class="chart-card-body">
+            <canvas #pipelineChart></canvas>
           </div>
         </div>
 
-        <div class="analytics-panel">
-          <div class="panel-heading" style="background: linear-gradient(135deg, #605ca8, #9b59b6)">
-            <i class="fas fa-user-friends"></i> Active Users
+        <!-- Polar Area: Performance Metrics -->
+        <div class="chart-card" style="flex: 1">
+          <div class="chart-card-header">
+            <h3><i class="fas fa-bullseye"></i> Performance</h3>
           </div>
-          <div class="panel-body">
-            <div class="user-split">
-              <div>
-                <div class="split-number">{{ stats.activeProviders }}</div>
-                <div class="split-label">Providers</div>
-              </div>
-              <div class="split-divider"></div>
-              <div>
-                <div class="split-number">{{ stats.activeReceivers }}</div>
-                <div class="split-label">Receivers</div>
-              </div>
-            </div>
+          <div class="chart-card-body">
+            <canvas #polarChart></canvas>
           </div>
         </div>
       </div>
@@ -151,11 +166,10 @@ import { DashboardStats } from '../../core/models/models';
     .admin-header h1 { font-size: 26px; font-weight: 700; margin-bottom: 2px; }
     .admin-header small { color: #888; font-size: 14px; }
 
-    /* Info Boxes */
     .info-boxes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px; }
     .info-box {
       background: white; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-      display: flex; align-items: center; padding: 0; min-height: 78px; overflow: hidden;
+      display: flex; align-items: center; min-height: 78px; overflow: hidden;
     }
     .info-box-icon {
       width: 70px; height: 78px; display: flex; align-items: center; justify-content: center;
@@ -165,8 +179,7 @@ import { DashboardStats } from '../../core/models/models';
     .info-box-text { font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; display: block; }
     .info-box-number { font-size: 28px; font-weight: 700; color: #333; }
 
-    /* Small Boxes */
-    .small-boxes { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
+    .small-boxes { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
     .small-box {
       border-radius: 4px; padding: 20px; color: white; position: relative; overflow: hidden;
       box-shadow: 0 1px 3px rgba(0,0,0,0.12); min-height: 100px;
@@ -179,39 +192,173 @@ import { DashboardStats } from '../../core/models/models';
     .bg-blue { background: linear-gradient(135deg, #3c8dbc, #007bff); }
     .bg-orange { background: linear-gradient(135deg, #f39c12, #fd7e14); }
 
-    /* Analytics Panels */
-    .analytics-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
-    .analytics-panel {
-      background: white; border-radius: 4px; overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    .charts-row { display: flex; gap: 20px; }
+    .chart-card {
+      flex: 1; background: white; border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden;
     }
-    .panel-heading {
-      padding: 12px 16px; color: white; font-size: 14px; font-weight: 600;
-      display: flex; align-items: center; gap: 8px;
+    .chart-card-header {
+      padding: 14px 20px; border-bottom: 1px solid #f0f0f0;
     }
-    .panel-body { padding: 20px; text-align: center; }
-    .big-number { font-size: 36px; font-weight: 800; color: #333; }
-    .panel-label { font-size: 12px; color: #999; margin: 6px 0 12px; }
-    .progress-bar-wrap {
-      width: 100%; height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden;
+    .chart-card-header h3 { font-size: 15px; font-weight: 600; color: #444; display: flex; align-items: center; gap: 8px; margin: 0; }
+    .chart-card-body { padding: 20px; position: relative; }
+    .chart-card-footer {
+      padding: 12px 20px; border-top: 1px solid #f0f0f0; display: flex; gap: 16px;
+      flex-wrap: wrap; font-size: 13px; color: #666;
     }
-    .progress-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+    .footer-item { display: flex; align-items: center; gap: 6px; }
+    .footer-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 
-    /* User Split */
-    .user-split { display: flex; align-items: center; justify-content: center; gap: 24px; padding: 8px 0; }
-    .split-number { font-size: 32px; font-weight: 800; color: #333; }
-    .split-label { font-size: 12px; color: #999; text-transform: uppercase; }
-    .split-divider { width: 1px; height: 50px; background: #e0e0e0; }
+    @media (max-width: 768px) {
+      .charts-row { flex-direction: column; }
+    }
   `]
 })
-export class AdminDashboardComponent implements OnInit {
+export class AdminDashboardComponent implements OnInit, AfterViewInit {
     stats: DashboardStats | null = null;
+
+    @ViewChild('donutChart') donutCanvas!: ElementRef<HTMLCanvasElement>;
+    @ViewChild('barChart') barCanvas!: ElementRef<HTMLCanvasElement>;
+    @ViewChild('pipelineChart') pipelineCanvas!: ElementRef<HTMLCanvasElement>;
+    @ViewChild('polarChart') polarCanvas!: ElementRef<HTMLCanvasElement>;
 
     constructor(private api: ApiService) { }
 
     ngOnInit() {
         this.api.getDashboardStats().subscribe({
-            next: (data) => this.stats = data
+            next: (data) => {
+                this.stats = data;
+                // Charts need DOM — setTimeout ensures ViewChild refs are ready
+                setTimeout(() => this.renderCharts(), 0);
+            }
+        });
+    }
+
+    ngAfterViewInit() { }
+
+    renderCharts() {
+        if (!this.stats) return;
+
+        // Donut Chart — Listing Status Breakdown
+        new Chart(this.donutCanvas.nativeElement, {
+            type: 'doughnut',
+            data: {
+                labels: ['Approved', 'Claimed', 'Confirmed', 'Expired', 'Rejected', 'Under Review'],
+                datasets: [{
+                    data: [
+                        this.stats.approvedListings,
+                        this.stats.claimedListings,
+                        this.stats.confirmedPickups,
+                        this.stats.expiredListings,
+                        this.stats.rejectedListings || 0,
+                        (this.stats.listingsByStatus?.['UNDER_REVIEW'] || 0)
+                    ],
+                    backgroundColor: ['#00a65a', '#f39c12', '#00c0ef', '#dd4b39', '#605ca8', '#d2d6de'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                cutout: '60%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, font: { size: 12 } } }
+                }
+            }
+        });
+
+        // Bar Chart — Active Users by Role
+        new Chart(this.barCanvas.nativeElement, {
+            type: 'bar',
+            data: {
+                labels: ['Providers', 'Receivers', 'Pending'],
+                datasets: [{
+                    label: 'Users',
+                    data: [this.stats.activeProviders, this.stats.activeReceivers, this.stats.pendingUsers],
+                    backgroundColor: ['rgba(0, 166, 90, 0.8)', 'rgba(60, 141, 188, 0.8)', 'rgba(243, 156, 18, 0.8)'],
+                    borderColor: ['#00a65a', '#3c8dbc', '#f39c12'],
+                    borderWidth: 2,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 12 } }, grid: { color: '#f0f0f0' } },
+                    x: { ticks: { font: { size: 12 } }, grid: { display: false } }
+                }
+            }
+        });
+
+        // Horizontal Bar — Listing Pipeline
+        new Chart(this.pipelineCanvas.nativeElement, {
+            type: 'bar',
+            data: {
+                labels: ['Posted', 'Under Review', 'Approved', 'Claimed', 'Picked Up', 'Confirmed', 'Expired', 'Rejected'],
+                datasets: [{
+                    label: 'Listings',
+                    data: [
+                        this.stats.listingsByStatus?.['POSTED'] || 0,
+                        this.stats.listingsByStatus?.['UNDER_REVIEW'] || 0,
+                        this.stats.approvedListings,
+                        this.stats.claimedListings,
+                        this.stats.listingsByStatus?.['PICKED_UP'] || 0,
+                        this.stats.confirmedPickups,
+                        this.stats.expiredListings,
+                        this.stats.rejectedListings || 0
+                    ],
+                    backgroundColor: [
+                        'rgba(210, 214, 222, 0.8)', 'rgba(243, 156, 18, 0.8)', 'rgba(0, 166, 90, 0.8)',
+                        'rgba(162, 155, 254, 0.8)', 'rgba(253, 121, 168, 0.8)', 'rgba(0, 192, 239, 0.8)',
+                        'rgba(99, 110, 114, 0.8)', 'rgba(221, 75, 57, 0.8)'
+                    ],
+                    borderWidth: 0,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 12 } }, grid: { color: '#f5f5f5' } },
+                    y: { ticks: { font: { size: 12 } }, grid: { display: false } }
+                }
+            }
+        });
+
+        // Polar Area — Performance Metrics
+        new Chart(this.polarCanvas.nativeElement, {
+            type: 'polarArea',
+            data: {
+                labels: ['Approval', 'Claims', 'Pickups', 'Waste'],
+                datasets: [{
+                    data: [
+                        this.stats.approvalRate,
+                        this.stats.claimSuccessRate,
+                        this.stats.confirmedPickups > 0 ? 100 : 0,
+                        this.stats.expiryRate
+                    ],
+                    backgroundColor: [
+                        'rgba(0, 166, 90, 0.6)', 'rgba(60, 141, 188, 0.6)',
+                        'rgba(0, 192, 239, 0.6)', 'rgba(221, 75, 57, 0.6)'
+                    ],
+                    borderColor: ['#00a65a', '#3c8dbc', '#00c0ef', '#dd4b39'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 12, usePointStyle: true, font: { size: 11 } } }
+                },
+                scales: { r: { ticks: { display: false }, grid: { color: '#f0f0f0' } } }
+            }
         });
     }
 }
