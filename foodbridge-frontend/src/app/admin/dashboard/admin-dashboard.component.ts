@@ -95,8 +95,8 @@ Chart.register(...registerables);
 
     /* Stat Tiles */
     .stat-row {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 16px; margin-bottom: 28px;
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 20px; margin-bottom: 28px;
     }
     .stat-tile {
       background: white; border-radius: 12px; padding: 20px;
@@ -134,8 +134,14 @@ Chart.register(...registerables);
     }
     .chart-card-body { padding: 20px; }
 
+    @media (max-width: 992px) {
+      .stat-row { grid-template-columns: repeat(2, 1fr); }
+    }
     @media (max-width: 768px) {
       .charts-row { flex-direction: column; }
+    }
+    @media (max-width: 576px) {
+      .stat-row { grid-template-columns: 1fr; }
     }
   `]
 })
