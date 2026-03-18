@@ -57,16 +57,49 @@ import { DashboardStats } from '../../core/models/models';
         </div>
       </div>
 
-      <!-- Status Breakdown -->
-      <div class="card" style="padding: 32px" *ngIf="stats?.listingsByStatus">
-        <h2 style="margin-bottom: 20px; font-size: 20px;"><i class="fas fa-chart-bar"></i> Listings by Status</h2>
-        <div class="status-bars">
-          <div class="status-bar" *ngFor="let entry of statusEntries">
-            <div class="status-label">{{ entry[0].replace('_', ' ') }}</div>
-            <div class="bar-container">
-              <div class="bar-fill" [style.width]="getBarWidth(entry[1])" [style.background]="getBarColor(entry[0])"></div>
-            </div>
-            <div class="status-count">{{ entry[1] }}</div>
+      <!-- Analytics Section -->
+      <div class="analytics-grid" *ngIf="stats">
+        <div class="card analytics-card fade-in-up" style="animation-delay: 0.45s">
+          <div class="analytics-icon" style="background: linear-gradient(135deg, #2ecc71, #27ae60)">
+            <i class="fas fa-chart-pie"></i>
+          </div>
+          <div class="analytics-body">
+            <div class="analytics-value">{{ stats.approvalRate }}%</div>
+            <div class="analytics-label">Approval Rate</div>
+            <div class="analytics-sub">Listings approved out of total processed</div>
+          </div>
+        </div>
+
+        <div class="card analytics-card fade-in-up" style="animation-delay: 0.5s">
+          <div class="analytics-icon" style="background: linear-gradient(135deg, #3498db, #2980b9)">
+            <i class="fas fa-trophy"></i>
+          </div>
+          <div class="analytics-body">
+            <div class="analytics-value">{{ stats.claimSuccessRate }}%</div>
+            <div class="analytics-label">Claim Success Rate</div>
+            <div class="analytics-sub">Confirmed pickups out of total claims</div>
+          </div>
+        </div>
+
+        <div class="card analytics-card fade-in-up" style="animation-delay: 0.55s">
+          <div class="analytics-icon" style="background: linear-gradient(135deg, #e74c3c, #c0392b)">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="analytics-body">
+            <div class="analytics-value">{{ stats.expiryRate }}%</div>
+            <div class="analytics-label">Expiry Rate</div>
+            <div class="analytics-sub">Listings expired without being claimed</div>
+          </div>
+        </div>
+
+        <div class="card analytics-card fade-in-up" style="animation-delay: 0.6s">
+          <div class="analytics-icon" style="background: linear-gradient(135deg, #9b59b6, #8e44ad)">
+            <i class="fas fa-user-friends"></i>
+          </div>
+          <div class="analytics-body">
+            <div class="analytics-value">{{ stats.activeProviders }} / {{ stats.activeReceivers }}</div>
+            <div class="analytics-label">Active Providers / Receivers</div>
+            <div class="analytics-sub">Approved and active users by role</div>
           </div>
         </div>
       </div>
@@ -75,17 +108,24 @@ import { DashboardStats } from '../../core/models/models';
     </div>
   `,
     styles: [`
-    .status-bars { display: flex; flex-direction: column; gap: 12px; }
-    .status-bar { display: flex; align-items: center; gap: 16px; }
-    .status-label { width: 120px; font-size: 13px; font-weight: 600; color: #555; text-transform: capitalize; }
-    .bar-container { flex: 1; height: 28px; background: #f0f0f0; border-radius: 14px; overflow: hidden; }
-    .bar-fill { height: 100%; border-radius: 14px; transition: width 0.8s ease; min-width: 4px; }
-    .status-count { font-size: 14px; font-weight: 700; width: 40px; text-align: right; }
+    .analytics-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 28px;
+    }
+    .analytics-card {
+      display: flex; align-items: center; gap: 20px; padding: 28px;
+    }
+    .analytics-icon {
+      width: 56px; height: 56px; border-radius: 16px; display: flex;
+      align-items: center; justify-content: center; font-size: 22px; color: white; flex-shrink: 0;
+    }
+    .analytics-body { flex: 1; }
+    .analytics-value { font-size: 28px; font-weight: 800; color: #1a1a2e; }
+    .analytics-label { font-size: 14px; font-weight: 600; color: #555; margin-top: 2px; }
+    .analytics-sub { font-size: 11px; color: #999; margin-top: 4px; }
   `]
 })
 export class AdminDashboardComponent implements OnInit {
     stats: DashboardStats | null = null;
-    statusEntries: [string, number][] = [];
 
     constructor(private api: ApiService) { }
 
@@ -93,24 +133,7 @@ export class AdminDashboardComponent implements OnInit {
         this.api.getDashboardStats().subscribe({
             next: (data) => {
                 this.stats = data;
-                if (data.listingsByStatus) {
-                    this.statusEntries = Object.entries(data.listingsByStatus);
-                }
             }
         });
-    }
-
-    getBarWidth(count: number): string {
-        const max = Math.max(...this.statusEntries.map(e => e[1]), 1);
-        return (count / max * 100) + '%';
-    }
-
-    getBarColor(status: string): string {
-        const colors: any = {
-            'POSTED': '#bdc3c7', 'UNDER_REVIEW': '#f39c12', 'APPROVED': '#2ecc71',
-            'CLAIMED': '#9b59b6', 'PICKED_UP': '#e84393', 'CONFIRMED': '#00b894',
-            'EXPIRED': '#636e72', 'REJECTED': '#e74c3c'
-        };
-        return colors[status] || '#3498db';
     }
 }

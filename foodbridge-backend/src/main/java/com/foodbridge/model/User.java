@@ -31,6 +31,12 @@
 
         private String address;
 
+        private String pincode;
+
+        private String city;
+
+        private String state;
+
         private String aadhaarNumber;
 
         private String purpose;
@@ -140,6 +146,30 @@
 
         public void setPurpose(String purpose) {
             this.purpose = purpose;
+        }
+
+        public String getPincode() {
+            return pincode;
+        }
+
+        public void setPincode(String pincode) {
+            this.pincode = pincode;
+        }
+
+        public String getCity() {
+            return city;
+        }
+
+        public void setCity(String city) {
+            this.city = city;
+        }
+
+        public String getState() {
+            return state;
+        }
+
+        public void setState(String state) {
+            this.state = state;
         }
 
         public Double getLatitude() {

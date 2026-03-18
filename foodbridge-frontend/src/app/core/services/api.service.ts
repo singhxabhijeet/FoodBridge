@@ -133,4 +133,17 @@ export class ApiService {
     getImpactStats(): Observable<any> {
         return this.http.get(`${this.apiUrl}/public/impact`);
     }
+
+    // ===== New Round 2 Methods =====
+    deleteUser(userId: number): Observable<any> {
+        return this.http.delete(`${this.apiUrl}/admin/users/${userId}`);
+    }
+
+    updateReview(checkId: number, approved: boolean, reason: string): Observable<any> {
+        return this.http.put(`${this.apiUrl}/quality-checks/${checkId}/update`, { approved, reason });
+    }
+
+    cancelClaim(claimId: number): Observable<any> {
+        return this.http.delete(`${this.apiUrl}/claims/${claimId}`);
+    }
 }

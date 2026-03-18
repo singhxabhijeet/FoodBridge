@@ -2,6 +2,7 @@ package com.foodbridge.service;
 
 import com.foodbridge.dto.DashboardStats;
 import com.foodbridge.model.enums.ListingStatus;
+import com.foodbridge.model.enums.Role;
 import com.foodbridge.repository.FoodListingRepository;
 import com.foodbridge.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,11 +26,19 @@ public class DashboardService {
     public DashboardStats getDashboardStats() {
         DashboardStats stats = new DashboardStats();
 
-        stats.setTotalListings(listingRepository.count());
-        stats.setApprovedListings(listingRepository.countByStatus(ListingStatus.APPROVED));
-        stats.setClaimedListings(listingRepository.countByStatus(ListingStatus.CLAIMED));
-        stats.setConfirmedPickups(listingRepository.countByStatus(ListingStatus.CONFIRMED));
-        stats.setExpiredListings(listingRepository.countByStatus(ListingStatus.EXPIRED));
+        long total = listingRepository.count();
+        long approved = listingRepository.countByStatus(ListingStatus.APPROVED);
+        long claimed = listingRepository.countByStatus(ListingStatus.CLAIMED);
+        long confirmed = listingRepository.countByStatus(ListingStatus.CONFIRMED);
+        long expired = listingRepository.countByStatus(ListingStatus.EXPIRED);
+        long rejected = listingRepository.countByStatus(ListingStatus.REJECTED);
+
+        stats.setTotalListings(total);
+        stats.setApprovedListings(approved);
+        stats.setClaimedListings(claimed);
+        stats.setConfirmedPickups(confirmed);
+        stats.setExpiredListings(expired);
+        stats.setRejectedListings(rejected);
         stats.setTotalUsers(userRepository.count());
         stats.setPendingUsers(userRepository.findByApprovedFalse().size());
 
@@ -39,6 +48,18 @@ public class DashboardService {
                 .mapToLong(l -> l.getQuantity())
                 .sum();
         stats.setTotalFoodSaved(totalSaved);
+
+        // Analytics rates
+        long totalProcessed = approved + confirmed + claimed + expired + rejected;
+        stats.setApprovalRate(totalProcessed > 0 ? Math.round((double)(approved + confirmed + claimed) / totalProcessed * 1000.0) / 10.0 : 0);
+        stats.setClaimSuccessRate(claimed + confirmed > 0 ? Math.round((double) confirmed / (claimed + confirmed) * 1000.0) / 10.0 : 0);
+        stats.setExpiryRate(totalProcessed > 0 ? Math.round((double) expired / totalProcessed * 1000.0) / 10.0 : 0);
+
+        // Active users by role
+        stats.setActiveProviders(userRepository.findByRoleAndApprovedTrue(Role.PROVIDER).size());
+        long receivers = userRepository.findByRoleAndApprovedTrue(Role.RECEIVER).size();
+        long compostReceivers = userRepository.findByRoleAndApprovedTrue(Role.COMPOST_RECEIVER).size();
+        stats.setActiveReceivers(receivers + compostReceivers);
 
         // Listings by status breakdown
         Map<String, Long> byStatus = new HashMap<>();

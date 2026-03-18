@@ -72,4 +72,12 @@ public class UserService {
         userRepository.save(user);
         return user;
     }
+
+    /**
+     * Admin deletes a user permanently.
+     */
+    public void deleteUser(Long userId) {
+        User user = getUserById(userId);
+        userRepository.delete(user);
+    }
 }

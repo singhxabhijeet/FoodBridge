@@ -13,76 +13,57 @@ public class DashboardStats {
     private long totalFoodSaved; // quantity sum of confirmed listings
     private Map<String, Long> listingsByStatus;
 
+    // Analytics
+    private double approvalRate;      // approved / total * 100
+    private double claimSuccessRate;   // confirmed / claimed * 100
+    private double expiryRate;         // expired / total * 100
+    private long activeProviders;
+    private long activeReceivers;
+    private long rejectedListings;
+
     // Getters and Setters
-    public long getTotalListings() {
-        return totalListings;
-    }
+    public long getTotalListings() { return totalListings; }
+    public void setTotalListings(long totalListings) { this.totalListings = totalListings; }
 
-    public void setTotalListings(long totalListings) {
-        this.totalListings = totalListings;
-    }
+    public long getApprovedListings() { return approvedListings; }
+    public void setApprovedListings(long approvedListings) { this.approvedListings = approvedListings; }
 
-    public long getApprovedListings() {
-        return approvedListings;
-    }
+    public long getClaimedListings() { return claimedListings; }
+    public void setClaimedListings(long claimedListings) { this.claimedListings = claimedListings; }
 
-    public void setApprovedListings(long approvedListings) {
-        this.approvedListings = approvedListings;
-    }
+    public long getConfirmedPickups() { return confirmedPickups; }
+    public void setConfirmedPickups(long confirmedPickups) { this.confirmedPickups = confirmedPickups; }
 
-    public long getClaimedListings() {
-        return claimedListings;
-    }
+    public long getExpiredListings() { return expiredListings; }
+    public void setExpiredListings(long expiredListings) { this.expiredListings = expiredListings; }
 
-    public void setClaimedListings(long claimedListings) {
-        this.claimedListings = claimedListings;
-    }
+    public long getTotalUsers() { return totalUsers; }
+    public void setTotalUsers(long totalUsers) { this.totalUsers = totalUsers; }
 
-    public long getConfirmedPickups() {
-        return confirmedPickups;
-    }
+    public long getPendingUsers() { return pendingUsers; }
+    public void setPendingUsers(long pendingUsers) { this.pendingUsers = pendingUsers; }
 
-    public void setConfirmedPickups(long confirmedPickups) {
-        this.confirmedPickups = confirmedPickups;
-    }
+    public long getTotalFoodSaved() { return totalFoodSaved; }
+    public void setTotalFoodSaved(long totalFoodSaved) { this.totalFoodSaved = totalFoodSaved; }
 
-    public long getExpiredListings() {
-        return expiredListings;
-    }
+    public Map<String, Long> getListingsByStatus() { return listingsByStatus; }
+    public void setListingsByStatus(Map<String, Long> listingsByStatus) { this.listingsByStatus = listingsByStatus; }
 
-    public void setExpiredListings(long expiredListings) {
-        this.expiredListings = expiredListings;
-    }
+    public double getApprovalRate() { return approvalRate; }
+    public void setApprovalRate(double approvalRate) { this.approvalRate = approvalRate; }
 
-    public long getTotalUsers() {
-        return totalUsers;
-    }
+    public double getClaimSuccessRate() { return claimSuccessRate; }
+    public void setClaimSuccessRate(double claimSuccessRate) { this.claimSuccessRate = claimSuccessRate; }
 
-    public void setTotalUsers(long totalUsers) {
-        this.totalUsers = totalUsers;
-    }
+    public double getExpiryRate() { return expiryRate; }
+    public void setExpiryRate(double expiryRate) { this.expiryRate = expiryRate; }
 
-    public long getPendingUsers() {
-        return pendingUsers;
-    }
+    public long getActiveProviders() { return activeProviders; }
+    public void setActiveProviders(long activeProviders) { this.activeProviders = activeProviders; }
 
-    public void setPendingUsers(long pendingUsers) {
-        this.pendingUsers = pendingUsers;
-    }
+    public long getActiveReceivers() { return activeReceivers; }
+    public void setActiveReceivers(long activeReceivers) { this.activeReceivers = activeReceivers; }
 
-    public long getTotalFoodSaved() {
-        return totalFoodSaved;
-    }
-
-    public void setTotalFoodSaved(long totalFoodSaved) {
-        this.totalFoodSaved = totalFoodSaved;
-    }
-
-    public Map<String, Long> getListingsByStatus() {
-        return listingsByStatus;
-    }
-
-    public void setListingsByStatus(Map<String, Long> listingsByStatus) {
-        this.listingsByStatus = listingsByStatus;
-    }
+    public long getRejectedListings() { return rejectedListings; }
+    public void setRejectedListings(long rejectedListings) { this.rejectedListings = rejectedListings; }
 }

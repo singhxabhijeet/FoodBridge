@@ -152,4 +152,32 @@ public class ClaimService {
         return claimRepository.findByListingId(listingId)
                 .orElseThrow(() -> new RuntimeException("Claim not found for this listing"));
     }
+
+    /**
+     * Cancel a claim (receiver can cancel before confirmation).
+     */
+    public void cancelClaim(Long claimId, User receiver) {
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new RuntimeException("Claim not found"));
+
+        if (!claim.getReceiver().getId().equals(receiver.getId())) {
+            throw new RuntimeException("You can only cancel your own claims");
+        }
+
+        if (claim.isProviderConfirmed() || claim.isReceiverConfirmed()) {
+            throw new RuntimeException("Cannot cancel a claim that has already been confirmed");
+        }
+
+        // Reset listing to approved
+        FoodListing listing = claim.getListing();
+        listing.setStatus(ListingStatus.APPROVED);
+        foodListingRepository.save(listing);
+
+        // Notify provider
+        notificationService.createNotification(listing.getProvider(),
+                "Claim on '" + listing.getFoodName() + "' was cancelled by " + receiver.getFullName(),
+                "CLAIM_CANCELLED");
+
+        claimRepository.delete(claim);
+    }
 }

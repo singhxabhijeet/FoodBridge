@@ -104,4 +104,18 @@ public class ClaimController {
             return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
         }
     }
+
+    /**
+     * Cancel a claim (Receiver only, before confirmation).
+     */
+    @DeleteMapping("/{claimId}")
+    public ResponseEntity<?> cancelClaim(@PathVariable Long claimId, Authentication authentication) {
+        try {
+            User receiver = userService.getUserByEmail(authentication.getName());
+            claimService.cancelClaim(claimId, receiver);
+            return ResponseEntity.ok(new ApiResponse(true, "Claim cancelled successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
+        }
+    }
 }

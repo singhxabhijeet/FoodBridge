@@ -113,7 +113,6 @@ import { ApiService } from '../../core/services/api.service';
               <i class="fas fa-user-circle"></i>
               {{ auth.getFullName() }}
             </span>
-            <span class="badge badge-{{ auth.getRole()?.toLowerCase() }}">{{ auth.getRole() }}</span>
             <button class="btn btn-sm btn-outline" (click)="auth.logout()">
               <i class="fas fa-sign-out-alt"></i> Logout
             </button>

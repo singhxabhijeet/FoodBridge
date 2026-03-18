@@ -52,4 +52,24 @@ public class QualityCheckController {
         List<QualityCheck> history = qualityCheckService.getCheckerHistory(checker);
         return ResponseEntity.ok(history);
     }
+
+    /**
+     * Update an existing review.
+     */
+    @PutMapping("/{checkId}/update")
+    public ResponseEntity<?> updateReview(
+            @PathVariable Long checkId,
+            @RequestBody Map<String, Object> body,
+            Authentication authentication) {
+        try {
+            User checker = userService.getUserByEmail(authentication.getName());
+            boolean approved = (Boolean) body.get("approved");
+            String reason = (String) body.getOrDefault("reason", "");
+
+            QualityCheck check = qualityCheckService.updateReview(checkId, checker, approved, reason);
+            return ResponseEntity.ok(new ApiResponse(true, "Review updated successfully", check));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
+        }
+    }
 }

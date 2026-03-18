@@ -43,6 +43,12 @@ import { AuthService } from '../../core/services/auth.service';
               <i class="fas fa-check"></i> Confirm Pickup
             </button>
 
+            <!-- Cancel Claim -->
+            <button class="btn btn-danger btn-sm" *ngIf="c.listing.status === 'CLAIMED' && !c.receiverConfirmed && !c.providerConfirmed"
+                    (click)="cancelClaim(c)">
+              <i class="fas fa-times"></i> Cancel Claim
+            </button>
+
             <!-- Rating -->
             <div class="rating-section" *ngIf="c.listing.status === 'CONFIRMED' && !c.rated">
               <h4>Rate Provider</h4>
@@ -120,5 +126,18 @@ export class MyClaimsComponent implements OnInit {
         }).subscribe({
             next: () => { claim.rated = true; }
         });
+    }
+
+    cancelClaim(claim: any) {
+        if (confirm('Are you sure you want to cancel this claim?')) {
+            this.api.cancelClaim(claim.id).subscribe({
+                next: () => {
+                    this.claims = this.claims.filter((c: any) => c.id !== claim.id);
+                },
+                error: (err: any) => {
+                    alert(err.error?.message || 'Failed to cancel claim');
+                }
+            });
+        }
     }
 }

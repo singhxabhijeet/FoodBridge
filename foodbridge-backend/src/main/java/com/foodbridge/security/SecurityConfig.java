@@ -54,9 +54,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/quality-checks/**").hasRole("CHECKER")
                         .requestMatchers("/api/listings/pending-review").hasRole("CHECKER")
 
-                        // Receiver endpoints
-                        .requestMatchers("/api/claims/**").hasRole("RECEIVER")
-                        .requestMatchers("/api/listings/approved").hasRole("RECEIVER")
+                        // Receiver endpoints (both RECEIVER and COMPOST_RECEIVER)
+                        .requestMatchers("/api/claims/**").hasAnyRole("RECEIVER", "COMPOST_RECEIVER")
+                        .requestMatchers("/api/listings/approved").hasAnyRole("RECEIVER", "COMPOST_RECEIVER")
 
                         // Admin endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")

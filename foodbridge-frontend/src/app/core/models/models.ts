@@ -8,6 +8,9 @@ export interface User {
     role: string;
     organization: string;
     address: string;
+    pincode: string;
+    city: string;
+    state: string;
     aadhaarNumber: string;
     purpose: string;
     latitude: number;

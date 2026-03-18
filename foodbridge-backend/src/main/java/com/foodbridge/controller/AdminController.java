@@ -96,4 +96,17 @@ public class AdminController {
     public ResponseEntity<List<FoodListing>> getAllListings() {
         return ResponseEntity.ok(listingService.getAllListings());
     }
+
+    /**
+     * Delete a user permanently.
+     */
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        try {
+            userService.deleteUser(id);
+            return ResponseEntity.ok(new ApiResponse(true, "User deleted successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
+        }
+    }
 }
