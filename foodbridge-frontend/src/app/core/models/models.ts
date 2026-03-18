@@ -91,6 +91,12 @@ export interface DashboardStats {
     pendingUsers: number;
     totalFoodSaved: number;
     listingsByStatus: { [key: string]: number };
+    approvalRate: number;
+    claimSuccessRate: number;
+    expiryRate: number;
+    activeProviders: number;
+    activeReceivers: number;
+    rejectedListings: number;
 }
 
 export interface AuthResponse {

@@ -77,6 +77,14 @@ public class QualityCheckService {
             throw new RuntimeException("You can only update your own reviews");
         }
 
+        // Prevent updating reviews after listing has been picked up
+        ListingStatus currentStatus = check.getListing().getStatus();
+        if (currentStatus == ListingStatus.CLAIMED || currentStatus == ListingStatus.PICKED_UP
+                || currentStatus == ListingStatus.CONFIRMED) {
+            throw new RuntimeException("Cannot update review — listing has already been " +
+                    currentStatus.name().toLowerCase().replace('_', ' ') + " by a receiver.");
+        }
+
         check.setApproved(approved);
         check.setReason(reason);
         check.setCheckedAt(LocalDateTime.now());

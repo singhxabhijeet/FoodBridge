@@ -89,9 +89,12 @@ import { ApiService } from '../../core/services/api.service';
               </div>
             </div>
 
-            <button *ngIf="!h.editing" class="btn btn-sm btn-outline" style="margin-top: 12px" (click)="startEdit(h)">
+            <button *ngIf="!h.editing && !isPickedUp(h)" class="btn btn-sm btn-outline" style="margin-top: 12px" (click)="startEdit(h)">
               <i class="fas fa-edit"></i> Update Review
             </button>
+            <div *ngIf="isPickedUp(h)" style="margin-top: 12px; font-size: 12px; color: #999">
+              <i class="fas fa-lock"></i> Review locked — listing already {{ h.listing?.status?.toLowerCase()?.replace('_', ' ') }}
+            </div>
 
             <div class="alert alert-success" *ngIf="h.updated" style="margin-top:8px; padding:8px; font-size:13px">
               Review updated successfully!
@@ -177,5 +180,10 @@ export class ReviewQueueComponent implements OnInit {
             },
             error: () => { h.updating = false; }
         });
+    }
+
+    isPickedUp(h: any): boolean {
+        const s = h.listing?.status;
+        return s === 'CLAIMED' || s === 'PICKED_UP' || s === 'CONFIRMED';
     }
 }

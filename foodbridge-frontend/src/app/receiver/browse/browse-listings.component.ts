@@ -33,9 +33,23 @@ import { ApiService } from '../../core/services/api.service';
             <p class="listing-provider"><i class="fas fa-store"></i> {{ l.provider?.fullName }} ({{ l.provider?.organization }})</p>
 
             <div class="claim-section" *ngIf="!l.claimed">
-              <div class="form-group" style="margin-bottom: 10px">
-                <label style="font-size: 12px">Schedule Pickup Time</label>
-                <input type="datetime-local" class="form-control" [(ngModel)]="l.pickupTime" [name]="'pickup_' + l.id" style="font-size: 13px">
+              <label style="font-size: 12px; font-weight: 600; margin-bottom: 6px; display: block">Schedule Pickup</label>
+              <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap">
+                <input type="date" class="form-control" [(ngModel)]="l.pickupDate" [name]="'pdate_' + l.id"
+                       [min]="todayDate" style="font-size: 13px; flex: 1.2; min-width: 130px">
+                <select class="form-control" [(ngModel)]="l.pickupHour" [name]="'phour_' + l.id" style="font-size: 13px; flex: 0.6; min-width: 60px">
+                  <option value="" disabled>HH</option>
+                  <option *ngFor="let h of hours" [value]="h">{{ h }}</option>
+                </select>
+                <span style="font-size: 18px; font-weight: 700; color: #555; line-height: 42px">:</span>
+                <select class="form-control" [(ngModel)]="l.pickupMinute" [name]="'pmin_' + l.id" style="font-size: 13px; flex: 0.6; min-width: 60px">
+                  <option value="" disabled>MM</option>
+                  <option *ngFor="let m of minutes" [value]="m">{{ m }}</option>
+                </select>
+                <select class="form-control" [(ngModel)]="l.pickupPeriod" [name]="'pper_' + l.id" style="font-size: 13px; flex: 0.5; min-width: 60px">
+                  <option value="AM">AM</option>
+                  <option value="PM">PM</option>
+                </select>
               </div>
               <button class="btn btn-primary btn-sm" style="width:100%" (click)="claim(l)" [disabled]="l.claiming">
                 <i class="fas fa-hand-holding-heart"></i> {{ l.claiming ? 'Claiming...' : 'Claim This Food' }}
@@ -69,25 +83,43 @@ import { ApiService } from '../../core/services/api.service';
 })
 export class BrowseListingsComponent implements OnInit {
     listings: any[] = [];
+    hours = ['12', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11'];
+    minutes = ['00', '15', '30', '45'];
+    todayDate = new Date().toISOString().split('T')[0];
 
     constructor(private api: ApiService) { }
 
     ngOnInit() {
         this.api.getApprovedListings().subscribe({
             next: (data) => {
-                this.listings = data.map((l: any) => ({ ...l, pickupTime: '', claiming: false, claimed: false }));
+                this.listings = data.map((l: any) => ({
+                    ...l,
+                    pickupDate: '', pickupHour: '', pickupMinute: '', pickupPeriod: 'AM',
+                    claiming: false, claimed: false
+                }));
             },
             error: () => { }
         });
     }
 
+    to24h(hour: string, minute: string, period: string): string {
+        let h = parseInt(hour, 10);
+        if (period === 'PM' && h !== 12) { h += 12; }
+        else if (period === 'AM' && h === 12) { h = 0; }
+        const hStr = h < 10 ? '0' + h : h.toString();
+        return `${hStr}:${minute}`;
+    }
+
     claim(listing: any) {
-        if (!listing.pickupTime) {
-            alert('Please select a pickup time');
+        if (!listing.pickupDate || !listing.pickupHour || !listing.pickupMinute) {
+            alert('Please select a complete pickup date and time');
             return;
         }
+        const timeStr = this.to24h(listing.pickupHour, listing.pickupMinute, listing.pickupPeriod);
+        const pickupTime = `${listing.pickupDate}T${timeStr}`;
+
         listing.claiming = true;
-        this.api.claimListing(listing.id, listing.pickupTime).subscribe({
+        this.api.claimListing(listing.id, pickupTime).subscribe({
             next: () => {
                 listing.claiming = false;
                 listing.claimed = true;
