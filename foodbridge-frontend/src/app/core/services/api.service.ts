@@ -40,6 +40,12 @@ export class ApiService {
         });
     }
 
+    updateListingQuantity(id: number, quantity: number): Observable<any> {
+        return this.http.put(`${this.apiUrl}/listings/${id}/quantity`, null, {
+            params: new HttpParams().set('quantity', quantity.toString())
+        });
+    }
+
     // ===== Quality Checks =====
     reviewListing(listingId: number, approved: boolean, reason: string): Observable<any> {
         return this.http.post(`${this.apiUrl}/quality-checks/${listingId}/review`, { approved, reason });
@@ -50,8 +56,8 @@ export class ApiService {
     }
 
     // ===== Claims =====
-    claimListing(listingId: number, scheduledPickupTime: string): Observable<any> {
-        return this.http.post(`${this.apiUrl}/claims/${listingId}`, { scheduledPickupTime });
+    claimListing(listingId: number, scheduledPickupTime: string, requestedQuantity: number): Observable<any> {
+        return this.http.post(`${this.apiUrl}/claims/${listingId}`, { scheduledPickupTime, requestedQuantity });
     }
 
     providerConfirm(claimId: number): Observable<any> {
@@ -70,7 +76,7 @@ export class ApiService {
         return this.http.get(`${this.apiUrl}/claims/my`);
     }
 
-    getClaimByListing(listingId: number): Observable<any> {
+    getClaimsByListing(listingId: number): Observable<any> {
         return this.http.get(`${this.apiUrl}/claims/listing/${listingId}`);
     }
 
@@ -81,6 +87,10 @@ export class ApiService {
 
     getUserRatings(userId: number): Observable<any> {
         return this.http.get(`${this.apiUrl}/ratings/user/${userId}`);
+    }
+
+    getListingRatings(listingId: number): Observable<any> {
+        return this.http.get(`${this.apiUrl}/ratings/listing/${listingId}`);
     }
 
     // ===== Admin =====
@@ -112,35 +122,14 @@ export class ApiService {
         return this.http.get(`${this.apiUrl}/admin/listings`);
     }
 
-    // ===== Notifications =====
-    getNotifications(): Observable<any> {
-        return this.http.get(`${this.apiUrl}/notifications`);
-    }
-
-    markNotificationRead(id: number): Observable<any> {
-        return this.http.put(`${this.apiUrl}/notifications/${id}/read`, {});
-    }
-
-    // ===== Reports =====
-    downloadMonthlyReport(year: number, month: number): Observable<Blob> {
-        return this.http.get(`${this.apiUrl}/reports/monthly`, {
-            params: new HttpParams().set('year', year.toString()).set('month', month.toString()),
-            responseType: 'blob'
-        });
-    }
-
     // ===== Public =====
     getImpactStats(): Observable<any> {
         return this.http.get(`${this.apiUrl}/public/impact`);
     }
 
-    // ===== New Round 2 Methods =====
+    // ===== User Management =====
     deleteUser(userId: number): Observable<any> {
         return this.http.delete(`${this.apiUrl}/admin/users/${userId}`);
-    }
-
-    updateReview(checkId: number, approved: boolean, reason: string): Observable<any> {
-        return this.http.put(`${this.apiUrl}/quality-checks/${checkId}/update`, { approved, reason });
     }
 
     cancelClaim(claimId: number): Observable<any> {

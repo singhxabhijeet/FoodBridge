@@ -21,6 +21,8 @@ public class Claim {
 
     private LocalDateTime scheduledPickupTime;
 
+    private int requestedQuantity;
+
     private boolean providerConfirmed = false;
 
     private boolean receiverConfirmed = false;
@@ -29,72 +31,32 @@ public class Claim {
 
     private LocalDateTime claimedAt = LocalDateTime.now();
 
-    // ===== Constructors =====
-    public Claim() {
-    }
+    public Claim() {}
 
-    // ===== Getters and Setters =====
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public FoodListing getListing() { return listing; }
+    public void setListing(FoodListing listing) { this.listing = listing; }
 
-    public FoodListing getListing() {
-        return listing;
-    }
+    public User getReceiver() { return receiver; }
+    public void setReceiver(User receiver) { this.receiver = receiver; }
 
-    public void setListing(FoodListing listing) {
-        this.listing = listing;
-    }
+    public LocalDateTime getScheduledPickupTime() { return scheduledPickupTime; }
+    public void setScheduledPickupTime(LocalDateTime scheduledPickupTime) { this.scheduledPickupTime = scheduledPickupTime; }
 
-    public User getReceiver() {
-        return receiver;
-    }
+    public int getRequestedQuantity() { return requestedQuantity; }
+    public void setRequestedQuantity(int requestedQuantity) { this.requestedQuantity = requestedQuantity; }
 
-    public void setReceiver(User receiver) {
-        this.receiver = receiver;
-    }
+    public boolean isProviderConfirmed() { return providerConfirmed; }
+    public void setProviderConfirmed(boolean providerConfirmed) { this.providerConfirmed = providerConfirmed; }
 
-    public LocalDateTime getScheduledPickupTime() {
-        return scheduledPickupTime;
-    }
+    public boolean isReceiverConfirmed() { return receiverConfirmed; }
+    public void setReceiverConfirmed(boolean receiverConfirmed) { this.receiverConfirmed = receiverConfirmed; }
 
-    public void setScheduledPickupTime(LocalDateTime scheduledPickupTime) {
-        this.scheduledPickupTime = scheduledPickupTime;
-    }
+    public boolean isNoShow() { return noShow; }
+    public void setNoShow(boolean noShow) { this.noShow = noShow; }
 
-    public boolean isProviderConfirmed() {
-        return providerConfirmed;
-    }
-
-    public void setProviderConfirmed(boolean providerConfirmed) {
-        this.providerConfirmed = providerConfirmed;
-    }
-
-    public boolean isReceiverConfirmed() {
-        return receiverConfirmed;
-    }
-
-    public void setReceiverConfirmed(boolean receiverConfirmed) {
-        this.receiverConfirmed = receiverConfirmed;
-    }
-
-    public boolean isNoShow() {
-        return noShow;
-    }
-
-    public void setNoShow(boolean noShow) {
-        this.noShow = noShow;
-    }
-
-    public LocalDateTime getClaimedAt() {
-        return claimedAt;
-    }
-
-    public void setClaimedAt(LocalDateTime claimedAt) {
-        this.claimedAt = claimedAt;
-    }
+    public LocalDateTime getClaimedAt() { return claimedAt; }
+    public void setClaimedAt(LocalDateTime claimedAt) { this.claimedAt = claimedAt; }
 }

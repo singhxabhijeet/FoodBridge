@@ -9,6 +9,7 @@ import com.foodbridge.service.FoodListingService;
 import com.foodbridge.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,33 +28,37 @@ public class AdminController {
     private FoodListingService listingService;
 
     /**
-     * Get dashboard statistics.
+     * Get dashboard statistics — both ADMIN and SUB_ADMIN.
      */
     @GetMapping("/dashboard")
+    @PreAuthorize("hasAnyRole('ADMIN','SUB_ADMIN')")
     public ResponseEntity<DashboardStats> getDashboard() {
         return ResponseEntity.ok(dashboardService.getDashboardStats());
     }
 
     /**
-     * Get all users.
+     * Get all users — both ADMIN and SUB_ADMIN.
      */
     @GetMapping("/users")
+    @PreAuthorize("hasAnyRole('ADMIN','SUB_ADMIN')")
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
     /**
-     * Get pending (unapproved) users.
+     * Get pending users — both ADMIN and SUB_ADMIN.
      */
     @GetMapping("/users/pending")
+    @PreAuthorize("hasAnyRole('ADMIN','SUB_ADMIN')")
     public ResponseEntity<List<User>> getPendingUsers() {
         return ResponseEntity.ok(userService.getPendingUsers());
     }
 
     /**
-     * Approve a user.
+     * Approve a user — both ADMIN and SUB_ADMIN.
      */
     @PutMapping("/users/{id}/approve")
+    @PreAuthorize("hasAnyRole('ADMIN','SUB_ADMIN')")
     public ResponseEntity<?> approveUser(@PathVariable Long id) {
         try {
             User user = userService.approveUser(id);
@@ -64,9 +69,10 @@ public class AdminController {
     }
 
     /**
-     * Restrict a user.
+     * Restrict a user — ADMIN only.
      */
     @PutMapping("/users/{id}/restrict")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> restrictUser(@PathVariable Long id) {
         try {
             User user = userService.restrictUser(id);
@@ -77,9 +83,10 @@ public class AdminController {
     }
 
     /**
-     * Unrestrict a user.
+     * Unrestrict a user — ADMIN only.
      */
     @PutMapping("/users/{id}/unrestrict")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> unrestrictUser(@PathVariable Long id) {
         try {
             User user = userService.unrestrictUser(id);
@@ -90,17 +97,19 @@ public class AdminController {
     }
 
     /**
-     * Get all listings (admin view).
+     * Get all listings — both ADMIN and SUB_ADMIN.
      */
     @GetMapping("/listings")
+    @PreAuthorize("hasAnyRole('ADMIN','SUB_ADMIN')")
     public ResponseEntity<List<FoodListing>> getAllListings() {
         return ResponseEntity.ok(listingService.getAllListings());
     }
 
     /**
-     * Delete a user permanently.
+     * Delete a user — ADMIN only.
      */
     @DeleteMapping("/users/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         try {
             userService.deleteUser(id);

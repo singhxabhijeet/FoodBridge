@@ -92,8 +92,12 @@ export class ListingDetailComponent implements OnInit {
             next: (data) => {
                 this.listing = data;
                 if (data.status === 'CLAIMED' || data.status === 'PICKED_UP') {
-                    this.api.getClaimByListing(id).subscribe({
-                        next: (claim) => this.claim = claim,
+                    this.api.getClaimsByListing(id).subscribe({
+                        next: (claims: any[]) => {
+                            if (claims && claims.length > 0) {
+                                this.claim = claims[0];
+                            }
+                        },
                         error: () => { }
                     });
                 }

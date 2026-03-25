@@ -66,4 +66,14 @@ public class RatingController {
                 "averageScore", avg);
         return ResponseEntity.ok(result);
     }
+
+    /**
+     * Get ratings for a specific listing.
+     */
+    @GetMapping("/listing/{listingId}")
+    public ResponseEntity<?> getListingRatings(@PathVariable Long listingId) {
+        FoodListing listing = listingService.getListingById(listingId);
+        List<Rating> ratings = ratingService.getRatingsForListing(listing);
+        return ResponseEntity.ok(ratings);
+    }
 }

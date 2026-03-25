@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -48,18 +47,17 @@ public class SecurityConfig {
                         // Provider endpoints
                         .requestMatchers("/api/listings/create").hasRole("PROVIDER")
                         .requestMatchers("/api/listings/my").hasRole("PROVIDER")
-                        .requestMatchers("/api/reports/**").hasRole("PROVIDER")
 
                         // Checker endpoints
                         .requestMatchers("/api/quality-checks/**").hasRole("CHECKER")
                         .requestMatchers("/api/listings/pending-review").hasRole("CHECKER")
 
-                        // Receiver endpoints (both RECEIVER and COMPOST_RECEIVER) + newly allowed parties
+                        // Receiver endpoints
                         .requestMatchers("/api/claims/**").hasAnyRole("RECEIVER", "COMPOST_RECEIVER", "PROVIDER", "ADMIN")
                         .requestMatchers("/api/listings/approved").hasAnyRole("RECEIVER", "COMPOST_RECEIVER")
 
-                        // Admin endpoints
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        // Admin endpoints (ADMIN and SUB_ADMIN)
+                        .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUB_ADMIN")
 
                         // All other endpoints require authentication
                         .anyRequest().authenticated())

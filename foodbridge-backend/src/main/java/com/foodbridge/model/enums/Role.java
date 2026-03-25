@@ -5,5 +5,6 @@ public enum Role {
     RECEIVER,
     CHECKER,
     ADMIN,
+    SUB_ADMIN,
     COMPOST_RECEIVER
 }

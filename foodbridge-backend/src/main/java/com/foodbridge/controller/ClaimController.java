@@ -25,18 +25,21 @@ public class ClaimController {
     private UserService userService;
 
     /**
-     * Claim a food listing (Receiver only).
+     * Claim a food listing with requested quantity.
      */
     @PostMapping("/{listingId}")
     public ResponseEntity<?> claimListing(
             @PathVariable Long listingId,
-            @RequestBody Map<String, String> body,
+            @RequestBody Map<String, Object> body,
             Authentication authentication) {
         try {
             User receiver = userService.getUserByEmail(authentication.getName());
-            LocalDateTime pickupTime = LocalDateTime.parse(body.get("scheduledPickupTime"));
+            LocalDateTime pickupTime = LocalDateTime.parse((String) body.get("scheduledPickupTime"));
+            int requestedQuantity = body.get("requestedQuantity") != null
+                    ? ((Number) body.get("requestedQuantity")).intValue()
+                    : 0;
 
-            Claim claim = claimService.claimListing(listingId, receiver, pickupTime);
+            Claim claim = claimService.claimListing(listingId, receiver, pickupTime, requestedQuantity);
             return ResponseEntity.ok(new ApiResponse(true, "Listing claimed successfully", claim));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
@@ -95,13 +98,13 @@ public class ClaimController {
     }
 
     /**
-     * Get claim by listing ID.
+     * Get claims by listing ID (returns list for partial claims).
      */
     @GetMapping("/listing/{listingId}")
-    public ResponseEntity<?> getClaimByListing(@PathVariable Long listingId) {
+    public ResponseEntity<?> getClaimsByListing(@PathVariable Long listingId) {
         try {
-            Claim claim = claimService.getClaimByListingId(listingId);
-            return ResponseEntity.ok(claim);
+            List<Claim> claims = claimService.getClaimsByListingId(listingId);
+            return ResponseEntity.ok(claims);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
         }

@@ -2,16 +2,14 @@ package com.foodbridge.service;
 
 import com.foodbridge.model.FoodListing;
 import com.foodbridge.model.User;
+import com.foodbridge.model.enums.FoodType;
 import com.foodbridge.model.enums.ListingStatus;
-import com.foodbridge.model.enums.Role;
 import com.foodbridge.repository.FoodListingRepository;
-import com.foodbridge.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,55 +24,36 @@ public class FoodListingService {
     @Autowired
     private FoodListingRepository listingRepository;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private NotificationService notificationService;
-
     @Value("${app.upload.dir}")
     private String uploadDir;
 
     /**
      * Create a new food listing (Provider).
+     * NON_EDIBLE food is auto-approved (skips quality check).
      */
     public FoodListing createListing(FoodListing listing, User provider) {
         listing.setProvider(provider);
-        listing.setStatus(ListingStatus.POSTED);
         listing.setCreatedAt(LocalDateTime.now());
 
-        FoodListing saved = listingRepository.save(listing);
-
-        // Notify quality checkers that a new listing needs review
-        List<User> checkers = userRepository.findByRoleAndApprovedTrue(Role.CHECKER);
-        notificationService.notifyAllUsersWithRole(checkers,
-                "New food listing '" + saved.getFoodName() + "' needs quality review.",
-                "REVIEW_NEEDED");
-
-        // If NON_EDIBLE, also notify COMPOST_RECEIVERs
-        if ("NON_EDIBLE".equals(listing.getFoodType())) {
-            List<User> compostReceivers = userRepository.findByRoleAndApprovedTrue(Role.COMPOST_RECEIVER);
-            notificationService.notifyAllUsersWithRole(compostReceivers,
-                    "Non-edible food '" + saved.getFoodName() + "' posted — available for composting/animal feed.",
-                    "COMPOST_AVAILABLE");
+        if (listing.getFoodType() == FoodType.NON_EDIBLE) {
+            // Non-edible food skips quality check, goes directly to APPROVED
+            listing.setStatus(ListingStatus.APPROVED);
+        } else {
+            listing.setStatus(ListingStatus.UNDER_REVIEW);
         }
 
-        // Auto-set status to UNDER_REVIEW
-        saved.setStatus(ListingStatus.UNDER_REVIEW);
-        return listingRepository.save(saved);
+        return listingRepository.save(listing);
     }
 
     /**
      * Upload photo for a listing and return the file URL.
      */
     public String uploadPhoto(MultipartFile file) throws IOException {
-        // Create upload directory if it doesn't exist
-        Path uploadPath = Paths.get(uploadDir);
+        Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
         }
 
-        // Generate unique filename
         String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
         Path filePath = uploadPath.resolve(fileName);
         file.transferTo(filePath.toFile());
@@ -104,10 +83,9 @@ public class FoodListingService {
     }
 
     /**
-     * Get nearby approved listings within a radius (approximate bounding box).
+     * Get nearby approved listings within a radius.
      */
     public List<FoodListing> getNearbyApprovedListings(double lat, double lng, double radiusKm) {
-        // Approximate: 1 degree latitude = 111 km
         double latRange = radiusKm / 111.0;
         double lngRange = radiusKm / (111.0 * Math.cos(Math.toRadians(lat)));
 
@@ -142,40 +120,47 @@ public class FoodListingService {
     }
 
     /**
-     * Get provider's listings between dates (for monthly report).
+     * Update listing quantity (provider can edit).
+     */
+    public FoodListing updateQuantity(Long listingId, int newQuantity, User provider) {
+        FoodListing listing = getListingById(listingId);
+        if (!listing.getProvider().getId().equals(provider.getId())) {
+            throw new RuntimeException("You can only edit your own listings");
+        }
+        if (newQuantity < 1) {
+            throw new RuntimeException("Quantity must be at least 1");
+        }
+        listing.setQuantity(newQuantity);
+        return listingRepository.save(listing);
+    }
+
+    /**
+     * Get provider's listings between dates.
      */
     public List<FoodListing> getProviderListingsBetween(User provider, LocalDateTime start, LocalDateTime end) {
         return listingRepository.findByProviderAndCreatedAtBetween(provider, start, end);
     }
 
     /**
-     * Count listings by status (for dashboard stats).
+     * Count listings by status.
      */
     public long countByStatus(ListingStatus status) {
         return listingRepository.countByStatus(status);
     }
 
     /**
-     * Expire listings past their pickup window that are still APPROVED.
+     * Expire listings past their pickup window.
+     * Expired edible listings are converted to NON_EDIBLE and re-approved for composters.
      */
     public void expireOldListings() {
         List<FoodListing> expired = listingRepository
                 .findByStatusAndPickupWindowEndBefore(ListingStatus.APPROVED, LocalDateTime.now());
 
         for (FoodListing listing : expired) {
-            listing.setStatus(ListingStatus.EXPIRED);
+            // Convert to NON_EDIBLE for composters instead of marking as EXPIRED
+            listing.setFoodType(FoodType.NON_EDIBLE);
+            listing.setStatus(ListingStatus.APPROVED);
             listingRepository.save(listing);
-
-            // Notify provider
-            notificationService.createNotification(listing.getProvider(),
-                    "Your listing '" + listing.getFoodName() + "' has expired without being claimed.",
-                    "LISTING_EXPIRED");
-
-            // Notify COMPOST_RECEIVERs about expired food available for composting
-            List<User> compostReceivers = userRepository.findByRoleAndApprovedTrue(Role.COMPOST_RECEIVER);
-            notificationService.notifyAllUsersWithRole(compostReceivers,
-                    "Expired food '" + listing.getFoodName() + "' is now available for composting/animal feed.",
-                    "COMPOST_EXPIRED");
         }
     }
 }

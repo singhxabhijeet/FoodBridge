@@ -1,12 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
+import { AuthService } from '../../core/services/auth.service';
 import { User } from '../../core/models/models';
 
 @Component({
     selector: 'app-user-management',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, FormsModule],
     template: `
     <div class="page-container">
       <div class="page-header">
@@ -36,14 +39,25 @@ import { User } from '../../core/models/models';
             </div>
             <div class="user-card-actions">
               <button class="btn btn-primary btn-sm" (click)="approve(u.id)"><i class="fas fa-check"></i> Approve</button>
-              <button class="btn btn-danger btn-sm" (click)="confirmDelete(u)"><i class="fas fa-trash"></i> Reject & Delete</button>
+              <button class="btn btn-danger btn-sm" *ngIf="isFullAdmin" (click)="confirmDelete(u)"><i class="fas fa-trash"></i> Reject & Delete</button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- All Users -->
-      <h2 class="section-subtitle" style="margin-top: 32px"><i class="fas fa-list"></i> All Users ({{ nonAdminUsers.length }})</h2>
+      <!-- Role Filter -->
+      <div class="filter-row" style="margin-top: 32px; display:flex; gap:12px; align-items:center; margin-bottom: 16px">
+        <h2 class="section-subtitle" style="margin:0"><i class="fas fa-list"></i> All Users ({{ filteredUsers.length }})</h2>
+        <select class="form-control" [(ngModel)]="roleFilter" (ngModelChange)="applyFilter()" name="roleFilter" style="max-width:200px">
+          <option value="ALL">All Roles</option>
+          <option value="PROVIDER">Providers</option>
+          <option value="RECEIVER">Receivers</option>
+          <option value="CHECKER">Checkers</option>
+          <option value="COMPOST_RECEIVER">Composters</option>
+          <option value="SUB_ADMIN">Sub-Admins</option>
+        </select>
+      </div>
+
       <div class="table-container">
         <table>
           <thead>
@@ -58,7 +72,7 @@ import { User } from '../../core/models/models';
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let u of nonAdminUsers">
+            <tr *ngFor="let u of filteredUsers">
               <td>
                 <div style="font-weight:600">{{ u.fullName }}</div>
                 <div style="font-size:12px; color:#888">{{ u.email }}</div>
@@ -80,13 +94,13 @@ import { User } from '../../core/models/models';
                   <button *ngIf="!u.approved" (click)="approve(u.id); u.menuOpen=false">
                     <i class="fas fa-check" style="color:#2ecc71"></i> Approve
                   </button>
-                  <button *ngIf="u.approved && !u.restricted" (click)="restrict(u.id); u.menuOpen=false">
+                  <button *ngIf="u.approved && !u.restricted && isFullAdmin" (click)="restrict(u.id); u.menuOpen=false">
                     <i class="fas fa-ban" style="color:#e67e22"></i> Restrict
                   </button>
-                  <button *ngIf="u.restricted" (click)="unrestrict(u.id); u.menuOpen=false">
+                  <button *ngIf="u.restricted && isFullAdmin" (click)="unrestrict(u.id); u.menuOpen=false">
                     <i class="fas fa-unlock" style="color:#3498db"></i> Unrestrict
                   </button>
-                  <button (click)="confirmDelete(u); u.menuOpen=false" class="danger-item">
+                  <button *ngIf="isFullAdmin" (click)="confirmDelete(u); u.menuOpen=false" class="danger-item">
                     <i class="fas fa-trash" style="color:#e74c3c"></i> Delete
                   </button>
                 </div>
@@ -114,8 +128,6 @@ import { User } from '../../core/models/models';
   `,
     styles: [`
     .section-subtitle { font-size: 18px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-
-    /* User Cards for Pending */
     .user-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
     .user-card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; }
     .user-card-header {
@@ -133,14 +145,10 @@ import { User } from '../../core/models/models';
     .user-detail i { color: #aaa; width: 14px; margin-top: 2px; }
     .user-detail.purpose { font-style: italic; }
     .user-card-actions { padding: 12px 20px; border-top: 1px solid #f0f0f0; display: flex; gap: 8px; }
-
-    /* Status dot */
     .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
     .status-dot.active { background: #2ecc71; }
     .status-dot.restricted { background: #e74c3c; }
     .status-dot.pending { background: #f39c12; }
-
-    /* Action dropdown */
     .action-trigger {
       width: 32px; height: 32px; border: none; background: #f5f5f5; border-radius: 8px;
       cursor: pointer; font-size: 14px; color: #666; transition: all 0.2s;
@@ -157,8 +165,6 @@ import { User } from '../../core/models/models';
     }
     .action-dropdown button:hover { background: #f8f9fa; }
     .danger-item:hover { background: #fff5f5 !important; }
-
-    /* Modal */
     .modal-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background: rgba(0,0,0,0.5); display: flex; align-items: center;
@@ -175,21 +181,50 @@ import { User } from '../../core/models/models';
 export class UserManagementComponent implements OnInit {
     allUsers: any[] = [];
     pendingUsers: User[] = [];
-    nonAdminUsers: any[] = [];
+    filteredUsers: any[] = [];
     deleteTarget: User | null = null;
+    roleFilter = 'ALL';
+    isFullAdmin = false;
 
-    constructor(private api: ApiService) { }
+    constructor(private api: ApiService, private auth: AuthService, private route: ActivatedRoute) { }
 
-    ngOnInit() { this.loadUsers(); }
+    ngOnInit() {
+        this.isFullAdmin = this.auth.getRole() === 'ADMIN';
+
+        this.route.queryParams.subscribe(params => {
+            if (params['filter'] === 'pending') {
+                // Pre-filter to show pending — handled by default pending section
+            } else if (params['filter'] === 'restricted') {
+                this.roleFilter = 'ALL'; // Will filter restricted after loading
+            }
+        });
+
+        this.loadUsers();
+    }
 
     loadUsers() {
         this.api.getAllUsers().subscribe({
             next: (data) => {
                 this.allUsers = data.map((u: any) => ({ ...u, menuOpen: false }));
-                this.nonAdminUsers = this.allUsers.filter((u: any) => u.role !== 'ADMIN');
+                this.applyFilter();
             }
         });
         this.api.getPendingUsers().subscribe({ next: (data) => this.pendingUsers = data });
+    }
+
+    applyFilter() {
+        let users = this.allUsers.filter((u: any) => u.role !== 'ADMIN');
+
+        // Check for restricted query param
+        const qf = this.route.snapshot.queryParams['filter'];
+        if (qf === 'restricted') {
+            users = users.filter(u => u.restricted);
+        }
+
+        if (this.roleFilter !== 'ALL') {
+            users = users.filter(u => u.role === this.roleFilter);
+        }
+        this.filteredUsers = users;
     }
 
     toggleMenu(user: any) {
@@ -198,22 +233,11 @@ export class UserManagementComponent implements OnInit {
         user.menuOpen = !wasOpen;
     }
 
-    approve(id: number) {
-        this.api.approveUser(id).subscribe({ next: () => this.loadUsers() });
-    }
+    approve(id: number) { this.api.approveUser(id).subscribe({ next: () => this.loadUsers() }); }
+    restrict(id: number) { this.api.restrictUser(id).subscribe({ next: () => this.loadUsers() }); }
+    unrestrict(id: number) { this.api.unrestrictUser(id).subscribe({ next: () => this.loadUsers() }); }
 
-    restrict(id: number) {
-        this.api.restrictUser(id).subscribe({ next: () => this.loadUsers() });
-    }
-
-    unrestrict(id: number) {
-        this.api.unrestrictUser(id).subscribe({ next: () => this.loadUsers() });
-    }
-
-    confirmDelete(user: User) {
-        this.deleteTarget = user;
-    }
-
+    confirmDelete(user: User) { this.deleteTarget = user; }
     deleteUser() {
         if (!this.deleteTarget) return;
         this.api.deleteUser(this.deleteTarget.id).subscribe({

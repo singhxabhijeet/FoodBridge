@@ -19,13 +19,13 @@ import { AuthService } from '../../core/services/auth.service';
         <div class="card claim-card fade-in-up" *ngFor="let c of claims; let i = index" [style.animation-delay]="(i * 0.1) + 's'">
           <div class="claim-header">
             <h3>{{ c.listing?.foodName }}</h3>
-            <span class="badge badge-{{ c.listing.status.toLowerCase().replace('_', '-') }}">{{ c.listing.status.replace('_', ' ') }}</span>
+            <span class="badge badge-{{ c.listing?.status?.toLowerCase()?.replace('_', '-') }}">{{ c.listing?.status?.replace('_', ' ') }}</span>
           </div>
           <div class="claim-details">
             <div><i class="fas fa-store"></i> {{ c.listing?.provider?.fullName }}</div>
             <div><i class="fas fa-map-marker-alt"></i> {{ c.listing?.pickupAddress }}</div>
             <div><i class="fas fa-clock"></i> Scheduled: {{ c.scheduledPickupTime | date:'short' }}</div>
-            <div><i class="fas fa-weight-hanging"></i> {{ c.listing?.quantity }} {{ c.listing?.unit }}</div>
+            <div><i class="fas fa-weight-hanging"></i> Claimed: {{ c.requestedQuantity }} {{ c.listing?.unit }}</div>
           </div>
 
           <div class="claim-status">
@@ -38,19 +38,23 @@ import { AuthService } from '../../core/services/auth.service';
           </div>
 
           <div class="claim-actions">
-            <button class="btn btn-primary btn-sm" *ngIf="!c.receiverConfirmed && c.listing.status !== 'CONFIRMED'"
+            <button class="btn btn-primary btn-sm"
+                    *ngIf="!c.receiverConfirmed && c.listing?.status !== 'CONFIRMED'"
                     (click)="confirmPickup(c)">
               <i class="fas fa-check"></i> Confirm Pickup
             </button>
 
-            <!-- Cancel Claim -->
-            <button class="btn btn-danger btn-sm" *ngIf="c.listing.status === 'CLAIMED' && !c.receiverConfirmed && !c.providerConfirmed"
+            <!-- Cancel: show whenever not confirmed by either party -->
+            <button class="btn btn-danger btn-sm"
+                    *ngIf="!c.receiverConfirmed && !c.providerConfirmed && !c.noShow"
                     (click)="cancelClaim(c)">
               <i class="fas fa-times"></i> Cancel Claim
             </button>
 
-            <!-- Rating -->
-            <div class="rating-section" *ngIf="c.listing.status === 'CONFIRMED' && !c.rated">
+            <small class="field-error" *ngIf="c.error">{{ c.error }}</small>
+
+            <!-- Rating (only if CONFIRMED and not already rated) -->
+            <div class="rating-section" *ngIf="c.listing?.status === 'CONFIRMED' && !c.rated">
               <h4>Rate Provider</h4>
               <div class="stars">
                 <i *ngFor="let s of [1,2,3,4,5]" class="fas fa-star"
@@ -87,6 +91,7 @@ import { AuthService } from '../../core/services/auth.service';
     .claim-status { padding: 12px 0; border-top: 1px solid #f0f0f0; margin-bottom: 12px; }
     .rating-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid #f0f0f0; }
     .rating-section h4 { font-size: 14px; margin-bottom: 8px; }
+    .field-error { color: #e74c3c; font-size: 11px; display: block; margin-top: 8px; }
     @media (max-width: 600px) { .claim-details { grid-template-columns: 1fr; } }
   `]
 })
@@ -98,7 +103,7 @@ export class MyClaimsComponent implements OnInit {
     ngOnInit() {
         this.api.getMyClaims().subscribe({
             next: (data) => {
-                this.claims = data.map((c: any) => ({ ...c, ratingScore: 0, ratingComment: '', rated: false }));
+                this.claims = data.map((c: any) => ({ ...c, ratingScore: 0, ratingComment: '', rated: false, error: '' }));
             },
             error: () => { }
         });
@@ -113,6 +118,9 @@ export class MyClaimsComponent implements OnInit {
                 } else {
                     claim.listing.status = 'PICKED_UP';
                 }
+            },
+            error: (err: any) => {
+                claim.error = err.error?.message || 'Failed to confirm';
             }
         });
     }
@@ -124,7 +132,10 @@ export class MyClaimsComponent implements OnInit {
             score: claim.ratingScore,
             comment: claim.ratingComment
         }).subscribe({
-            next: () => { claim.rated = true; }
+            next: () => { claim.rated = true; },
+            error: (err: any) => {
+                claim.error = err.error?.message || 'Failed to submit rating';
+            }
         });
     }
 
@@ -135,7 +146,7 @@ export class MyClaimsComponent implements OnInit {
                     this.claims = this.claims.filter((c: any) => c.id !== claim.id);
                 },
                 error: (err: any) => {
-                    alert(err.error?.message || 'Failed to cancel claim');
+                    claim.error = err.error?.message || 'Failed to cancel claim';
                 }
             });
         }

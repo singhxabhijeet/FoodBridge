@@ -1,14 +1,16 @@
 import { Routes } from '@angular/router';
-import { authGuard, roleGuard } from './core/guards/auth.guard';
+import { authGuard, roleGuard, guestGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
     { path: '', redirectTo: '/impact', pathMatch: 'full' },
     {
         path: 'login',
+        canActivate: [guestGuard],
         loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent)
     },
     {
         path: 'register',
+        canActivate: [guestGuard],
         loadComponent: () => import('./auth/register/register.component').then(m => m.RegisterComponent)
     },
     {
@@ -31,10 +33,6 @@ export const routes: Routes = [
             {
                 path: 'listing/:id',
                 loadComponent: () => import('./provider/listing-detail/listing-detail.component').then(m => m.ListingDetailComponent)
-            },
-            {
-                path: 'reports',
-                loadComponent: () => import('./provider/reports/reports.component').then(m => m.ReportsComponent)
             },
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
         ]
@@ -78,7 +76,7 @@ export const routes: Routes = [
     {
         path: 'admin',
         canActivate: [roleGuard],
-        data: { role: 'ADMIN' },
+        data: { role: ['ADMIN', 'SUB_ADMIN'] },
         children: [
             {
                 path: 'dashboard',

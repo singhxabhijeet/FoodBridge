@@ -138,4 +138,18 @@ public class FoodListingController {
             return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
         }
     }
+
+    /**
+     * Provider: Update listing quantity.
+     */
+    @PutMapping("/{id}/quantity")
+    public ResponseEntity<?> updateQuantity(@PathVariable Long id, @RequestParam int quantity, Authentication authentication) {
+        try {
+            User provider = userService.getUserByEmail(authentication.getName());
+            FoodListing listing = listingService.updateQuantity(id, quantity, provider);
+            return ResponseEntity.ok(new ApiResponse(true, "Quantity updated", listing));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
+        }
+    }
 }

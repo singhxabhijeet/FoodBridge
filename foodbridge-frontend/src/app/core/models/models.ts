@@ -47,6 +47,7 @@ export interface Claim {
     listing: FoodListing;
     receiver: User;
     scheduledPickupTime: string;
+    requestedQuantity: number;
     providerConfirmed: boolean;
     receiverConfirmed: boolean;
     noShow: boolean;
@@ -72,14 +73,7 @@ export interface Rating {
     createdAt: string;
 }
 
-export interface Notification {
-    id: number;
-    user: User;
-    message: string;
-    type: string;
-    read: boolean;
-    createdAt: string;
-}
+
 
 export interface DashboardStats {
     totalListings: number;
@@ -99,6 +93,7 @@ export interface DashboardStats {
     activeCheckers: number;
     activeCompostReceivers: number;
     rejectedListings: number;
+    restrictedUsers: number;
 }
 
 export interface AuthResponse {

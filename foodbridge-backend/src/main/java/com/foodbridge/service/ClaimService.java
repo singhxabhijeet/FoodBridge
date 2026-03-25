@@ -25,16 +25,12 @@ public class ClaimService {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private NotificationService notificationService;
-
     private static final int MAX_NO_SHOWS = 3;
 
     /**
-     * Receiver claims a food listing.
+     * Receiver claims a food listing with a specific quantity.
      */
-    public Claim claimListing(Long listingId, User receiver, LocalDateTime scheduledPickupTime) {
-        // Check if receiver is restricted
+    public Claim claimListing(Long listingId, User receiver, LocalDateTime scheduledPickupTime, int requestedQuantity) {
         if (receiver.isRestricted()) {
             throw new RuntimeException("Your account is restricted due to excessive no-shows.");
         }
@@ -46,22 +42,32 @@ public class ClaimService {
             throw new RuntimeException("This listing is not available for claiming.");
         }
 
-        // Create claim
+        // Validate pickup time within provider's window
+        if (scheduledPickupTime.isBefore(listing.getPickupWindowStart()) ||
+                scheduledPickupTime.isAfter(listing.getPickupWindowEnd())) {
+            throw new RuntimeException("Pickup time must be within the provider's pickup window (" +
+                    listing.getPickupWindowStart() + " to " + listing.getPickupWindowEnd() + ").");
+        }
+
+        // Validate requested quantity
+        if (requestedQuantity <= 0 || requestedQuantity > listing.getQuantity()) {
+            throw new RuntimeException("Requested quantity must be between 1 and " + listing.getQuantity() + ".");
+        }
+
         Claim claim = new Claim();
         claim.setListing(listing);
         claim.setReceiver(receiver);
         claim.setScheduledPickupTime(scheduledPickupTime);
+        claim.setRequestedQuantity(requestedQuantity);
         claim.setClaimedAt(LocalDateTime.now());
         claimRepository.save(claim);
 
-        // Update listing status
-        listing.setStatus(ListingStatus.CLAIMED);
+        // Decrement available quantity
+        listing.setQuantity(listing.getQuantity() - requestedQuantity);
+        if (listing.getQuantity() == 0) {
+            listing.setStatus(ListingStatus.CLAIMED);
+        }
         foodListingRepository.save(listing);
-
-        // Notify provider
-        notificationService.createNotification(listing.getProvider(),
-                "Your listing '" + listing.getFoodName() + "' has been claimed by " + receiver.getFullName(),
-                "CLAIM_UPDATE");
 
         return claim;
     }
@@ -79,12 +85,12 @@ public class ClaimService {
 
         claim.setProviderConfirmed(true);
 
-        // If both confirmed, mark listing as confirmed
-        if (claim.isReceiverConfirmed()) {
-            claim.getListing().setStatus(ListingStatus.CONFIRMED);
-            foodListingRepository.save(claim.getListing());
-        } else {
-            claim.getListing().setStatus(ListingStatus.PICKED_UP);
+        if (claim.getListing().getQuantity() == 0) {
+            if (claim.isReceiverConfirmed()) {
+                claim.getListing().setStatus(ListingStatus.CONFIRMED);
+            } else {
+                claim.getListing().setStatus(ListingStatus.PICKED_UP);
+            }
             foodListingRepository.save(claim.getListing());
         }
 
@@ -104,12 +110,12 @@ public class ClaimService {
 
         claim.setReceiverConfirmed(true);
 
-        // If both confirmed, mark listing as confirmed
-        if (claim.isProviderConfirmed()) {
-            claim.getListing().setStatus(ListingStatus.CONFIRMED);
-            foodListingRepository.save(claim.getListing());
-        } else {
-            claim.getListing().setStatus(ListingStatus.PICKED_UP);
+        if (claim.getListing().getQuantity() == 0) {
+            if (claim.isProviderConfirmed()) {
+                claim.getListing().setStatus(ListingStatus.CONFIRMED);
+            } else {
+                claim.getListing().setStatus(ListingStatus.PICKED_UP);
+            }
             foodListingRepository.save(claim.getListing());
         }
 
@@ -126,22 +132,18 @@ public class ClaimService {
         claim.setNoShow(true);
         claimRepository.save(claim);
 
-        // Increment receiver's no-show count
         User receiver = claim.getReceiver();
         receiver.setNoShowCount(receiver.getNoShowCount() + 1);
 
-        // Restrict if too many no-shows
         if (receiver.getNoShowCount() >= MAX_NO_SHOWS) {
             receiver.setRestricted(true);
-            notificationService.createNotification(receiver,
-                    "Your account has been restricted due to " + MAX_NO_SHOWS + " no-shows.",
-                    "RESTRICTION");
         }
 
         userRepository.save(receiver);
 
-        // Reset listing to APPROVED so others can claim it
+        // Restore quantity and re-approve listing
         FoodListing listing = claim.getListing();
+        listing.setQuantity(listing.getQuantity() + claim.getRequestedQuantity());
         listing.setStatus(ListingStatus.APPROVED);
         foodListingRepository.save(listing);
     }
@@ -154,11 +156,10 @@ public class ClaimService {
     }
 
     /**
-     * Get claim by listing ID.
+     * Get claims by listing ID (returns list for partial claims).
      */
-    public Claim getClaimByListingId(Long listingId) {
-        return claimRepository.findByListingId(listingId)
-                .orElseThrow(() -> new RuntimeException("Claim not found for this listing"));
+    public List<Claim> getClaimsByListingId(Long listingId) {
+        return claimRepository.findByListingId(listingId);
     }
 
     /**
@@ -176,16 +177,16 @@ public class ClaimService {
             throw new RuntimeException("Cannot cancel a claim that has already been confirmed");
         }
 
-        // Reset listing to approved
         FoodListing listing = claim.getListing();
-        listing.setStatus(ListingStatus.APPROVED);
-        foodListingRepository.save(listing);
-
-        // Notify provider
-        notificationService.createNotification(listing.getProvider(),
-                "Claim on '" + listing.getFoodName() + "' was cancelled by " + receiver.getFullName(),
-                "CLAIM_CANCELLED");
+        listing.setQuantity(listing.getQuantity() + claim.getRequestedQuantity());
 
         claimRepository.delete(claim);
+
+        // Only reset status to APPROVED if no other claims remain
+        List<Claim> remainingClaims = claimRepository.findByListingId(listing.getId());
+        if (remainingClaims.isEmpty()) {
+            listing.setStatus(ListingStatus.APPROVED);
+        }
+        foodListingRepository.save(listing);
     }
 }

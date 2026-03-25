@@ -41,6 +41,7 @@ public class DashboardService {
         stats.setRejectedListings(rejected);
         stats.setTotalUsers(userRepository.count());
         stats.setPendingUsers(userRepository.findByApprovedFalse().size());
+        stats.setRestrictedUsers(userRepository.findByRestrictedTrue().size());
 
         // Total food saved = sum of quantity of CONFIRMED listings
         long totalSaved = listingRepository.findByStatus(ListingStatus.CONFIRMED)

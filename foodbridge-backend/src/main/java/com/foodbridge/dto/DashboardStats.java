@@ -22,6 +22,7 @@ public class DashboardStats {
     private long activeCheckers;
     private long activeCompostReceivers;
     private long rejectedListings;
+    private long restrictedUsers;
 
     // Getters and Setters
     public long getTotalListings() { return totalListings; }
@@ -74,4 +75,7 @@ public class DashboardStats {
 
     public long getRejectedListings() { return rejectedListings; }
     public void setRejectedListings(long rejectedListings) { this.rejectedListings = rejectedListings; }
+
+    public long getRestrictedUsers() { return restrictedUsers; }
+    public void setRestrictedUsers(long restrictedUsers) { this.restrictedUsers = restrictedUsers; }
 }

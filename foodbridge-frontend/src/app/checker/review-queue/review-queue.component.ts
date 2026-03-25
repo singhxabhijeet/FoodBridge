@@ -58,7 +58,7 @@ import { ApiService } from '../../core/services/api.service';
             <div class="history-header">
               <h3>{{ h.listing?.foodName }}</h3>
               <span class="badge" [class.badge-approved]="h.approved" [class.badge-rejected]="!h.approved">
-                {{ h.approved ? 'Approved' : 'Rejected' }}
+                {{ h.approved ? 'Approved' : 'Rejected (→ Non-Edible)' }}
               </span>
             </div>
             <div class="history-meta">
@@ -66,38 +66,8 @@ import { ApiService } from '../../core/services/api.service';
               <span><i class="fas fa-calendar"></i> Reviewed: {{ h.checkedAt | date:'short' }}</span>
               <span *ngIf="h.reason"><i class="fas fa-comment"></i> {{ h.reason }}</span>
             </div>
-
-            <!-- Update Review -->
-            <div class="update-section" *ngIf="h.editing">
-              <div class="form-group" style="margin-bottom: 10px">
-                <label style="font-size: 12px">New Decision</label>
-                <select class="form-control" [(ngModel)]="h.newApproved" [name]="'decision_' + h.id" style="font-size:13px">
-                  <option [ngValue]="true">Approve</option>
-                  <option [ngValue]="false">Reject</option>
-                </select>
-              </div>
-              <div class="form-group" style="margin-bottom: 10px">
-                <label style="font-size: 12px">Reason / Comments</label>
-                <input type="text" class="form-control" [(ngModel)]="h.newReason" [name]="'reason_' + h.id"
-                       placeholder="Update reason..." style="font-size:13px">
-              </div>
-              <div style="display:flex; gap:8px">
-                <button class="btn btn-primary btn-sm" (click)="submitUpdate(h)" [disabled]="h.updating">
-                  <i class="fas fa-save"></i> {{ h.updating ? 'Saving...' : 'Save' }}
-                </button>
-                <button class="btn btn-secondary btn-sm" (click)="h.editing = false">Cancel</button>
-              </div>
-            </div>
-
-            <button *ngIf="!h.editing && !isPickedUp(h)" class="btn btn-sm btn-outline" style="margin-top: 12px" (click)="startEdit(h)">
-              <i class="fas fa-edit"></i> Update Review
-            </button>
-            <div *ngIf="isPickedUp(h)" style="margin-top: 12px; font-size: 12px; color: #999">
-              <i class="fas fa-lock"></i> Review locked — listing already {{ h.listing?.status?.toLowerCase()?.replace('_', ' ') }}
-            </div>
-
-            <div class="alert alert-success" *ngIf="h.updated" style="margin-top:8px; padding:8px; font-size:13px">
-              Review updated successfully!
+            <div style="margin-top: 12px; font-size: 12px; color: #999">
+              <i class="fas fa-lock"></i> Review is final and cannot be edited
             </div>
           </div>
         </div>
@@ -131,9 +101,6 @@ import { ApiService } from '../../core/services/api.service';
     .history-header h3 { font-size: 17px; font-weight: 700; }
     .history-meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: #666; }
     .history-meta span { display: flex; align-items: center; gap: 4px; }
-    .update-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid #f0f0f0; }
-    .btn-outline { background: transparent; border: 1px solid #ccc; color: #555; }
-    .btn-outline:hover { border-color: #2ecc71; color: #2ecc71; }
   `]
 })
 export class ReviewQueueComponent implements OnInit {
@@ -153,37 +120,8 @@ export class ReviewQueueComponent implements OnInit {
     loadHistory() {
         this.api.getCheckerHistory().subscribe({
             next: (data) => {
-                this.history = data.map((h: any) => ({
-                    ...h, editing: false, updating: false, updated: false,
-                    newApproved: h.approved, newReason: h.reason || ''
-                }));
+                this.history = data;
             }
         });
-    }
-
-    startEdit(h: any) {
-        h.editing = true;
-        h.newApproved = h.approved;
-        h.newReason = h.reason || '';
-        h.updated = false;
-    }
-
-    submitUpdate(h: any) {
-        h.updating = true;
-        this.api.updateReview(h.id, h.newApproved, h.newReason).subscribe({
-            next: () => {
-                h.updating = false;
-                h.editing = false;
-                h.approved = h.newApproved;
-                h.reason = h.newReason;
-                h.updated = true;
-            },
-            error: () => { h.updating = false; }
-        });
-    }
-
-    isPickedUp(h: any): boolean {
-        const s = h.listing?.status;
-        return s === 'CLAIMED' || s === 'PICKED_UP' || s === 'CONFIRMED';
     }
 }

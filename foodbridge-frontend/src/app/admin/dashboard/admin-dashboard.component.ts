@@ -1,6 +1,8 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
+import { AuthService } from '../../core/services/auth.service';
 import { DashboardStats } from '../../core/models/models';
 import { Chart, registerables } from 'chart.js';
 
@@ -19,32 +21,39 @@ Chart.register(...registerables);
 
       <!-- Stat Cards Row -->
       <div class="stat-row">
-        <div class="stat-tile">
+        <div class="stat-tile clickable" (click)="goTo('/admin/listings')">
           <div class="tile-icon bg-info"><i class="fas fa-clipboard-list"></i></div>
           <div class="tile-body">
             <h2>{{ stats.totalListings }}</h2>
             <span>Total Listings</span>
           </div>
         </div>
-        <div class="stat-tile">
+        <div class="stat-tile clickable" (click)="goTo('/admin/listings', 'CONFIRMED')">
           <div class="tile-icon bg-success"><i class="fas fa-handshake"></i></div>
           <div class="tile-body">
             <h2>{{ stats.confirmedPickups }}</h2>
             <span>Confirmed Pickups</span>
           </div>
         </div>
-        <div class="stat-tile">
+        <div class="stat-tile clickable" (click)="goTo('/admin/users')">
           <div class="tile-icon bg-warning"><i class="fas fa-users"></i></div>
           <div class="tile-body">
             <h2>{{ stats.totalUsers }}</h2>
             <span>Total Users</span>
           </div>
         </div>
-        <div class="stat-tile">
+        <div class="stat-tile clickable" (click)="goTo('/admin/users', 'pending')">
           <div class="tile-icon bg-danger"><i class="fas fa-user-clock"></i></div>
           <div class="tile-body">
             <h2>{{ stats.pendingUsers }}</h2>
             <span>Pending Approvals</span>
+          </div>
+        </div>
+        <div class="stat-tile clickable" (click)="goTo('/admin/users', 'restricted')">
+          <div class="tile-icon bg-red"><i class="fas fa-user-lock"></i></div>
+          <div class="tile-body">
+            <h2>{{ stats.restrictedUsers }}</h2>
+            <span>Restricted Users</span>
           </div>
         </div>
         <div class="stat-tile">
@@ -54,7 +63,7 @@ Chart.register(...registerables);
             <span>Food Saved (units)</span>
           </div>
         </div>
-        <div class="stat-tile">
+        <div class="stat-tile clickable" (click)="goTo('/admin/listings', 'EXPIRED')">
           <div class="tile-icon bg-purple"><i class="fas fa-clock"></i></div>
           <div class="tile-body">
             <h2>{{ stats.expiredListings }}</h2>
@@ -93,9 +102,8 @@ Chart.register(...registerables);
     .admin-header h1 { font-size: 26px; font-weight: 700; margin-bottom: 2px; }
     .admin-header small { color: #888; font-size: 14px; }
 
-    /* Stat Tiles */
     .stat-row {
-      display: grid; grid-template-columns: repeat(3, 1fr);
+      display: grid; grid-template-columns: repeat(4, 1fr);
       gap: 20px; margin-bottom: 28px;
     }
     .stat-tile {
@@ -103,7 +111,8 @@ Chart.register(...registerables);
       display: flex; align-items: center; gap: 16px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: transform 0.2s, box-shadow 0.2s;
     }
-    .stat-tile:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+    .stat-tile.clickable { cursor: pointer; }
+    .stat-tile.clickable:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
     .tile-icon {
       width: 52px; height: 52px; border-radius: 14px; display: flex;
       align-items: center; justify-content: center; font-size: 20px; color: white; flex-shrink: 0;
@@ -114,10 +123,10 @@ Chart.register(...registerables);
     .bg-success { background: linear-gradient(135deg, #00a65a, #28a745); }
     .bg-warning { background: linear-gradient(135deg, #f39c12, #fd7e14); }
     .bg-danger { background: linear-gradient(135deg, #dd4b39, #e74c3c); }
+    .bg-red { background: linear-gradient(135deg, #c0392b, #e74c3c); }
     .bg-teal { background: linear-gradient(135deg, #20c997, #0dcaf0); }
     .bg-purple { background: linear-gradient(135deg, #605ca8, #9b59b6); }
 
-    /* Charts */
     .charts-row { display: flex; gap: 20px; }
     .chart-card {
       background: white; border-radius: 12px; overflow: hidden;
@@ -125,9 +134,7 @@ Chart.register(...registerables);
     }
     .chart-card.wide { flex: 3; }
     .chart-card.narrow { flex: 2; }
-    .chart-card-header {
-      padding: 16px 20px; border-bottom: 1px solid #f0f0f0;
-    }
+    .chart-card-header { padding: 16px 20px; border-bottom: 1px solid #f0f0f0; }
     .chart-card-header h3 {
       font-size: 15px; font-weight: 700; color: #333; margin: 0;
       display: flex; align-items: center; gap: 8px;
@@ -147,13 +154,15 @@ Chart.register(...registerables);
 })
 export class AdminDashboardComponent implements OnInit {
     stats: DashboardStats | null = null;
+    isFullAdmin = false;
 
     @ViewChild('pipelineChart') pipelineCanvas!: ElementRef<HTMLCanvasElement>;
     @ViewChild('barChart') barCanvas!: ElementRef<HTMLCanvasElement>;
 
-    constructor(private api: ApiService) { }
+    constructor(private api: ApiService, private auth: AuthService, private router: Router) { }
 
     ngOnInit() {
+        this.isFullAdmin = this.auth.getRole() === 'ADMIN';
         this.api.getDashboardStats().subscribe({
             next: (data) => {
                 this.stats = data;
@@ -162,10 +171,17 @@ export class AdminDashboardComponent implements OnInit {
         });
     }
 
+    goTo(path: string, filter?: string) {
+        if (filter) {
+            this.router.navigate([path], { queryParams: { filter } });
+        } else {
+            this.router.navigate([path]);
+        }
+    }
+
     renderCharts() {
         if (!this.stats) return;
 
-        // Horizontal Bar — Listing Pipeline
         new Chart(this.pipelineCanvas.nativeElement, {
             type: 'bar',
             data: {
@@ -203,7 +219,6 @@ export class AdminDashboardComponent implements OnInit {
             }
         });
 
-        // Bar Chart — Active Users by Role (all except Admin)
         new Chart(this.barCanvas.nativeElement, {
             type: 'bar',
             data: {

@@ -49,6 +49,11 @@ import { ApiService } from '../../core/services/api.service';
             <label>Reason / Comments</label>
             <textarea class="form-control" [(ngModel)]="reason" placeholder="Add comments or rejection reason..."></textarea>
           </div>
+          <div class="alert alert-warning" style="padding:10px;margin-bottom:16px;font-size:13px">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>This action is final.</strong> Reviews cannot be edited after submission.
+            Rejected listings will be converted to non-edible and made available to composters.
+          </div>
           <div class="action-buttons">
             <button class="btn btn-primary btn-lg" (click)="review(true)" [disabled]="loading">
               <i class="fas fa-check"></i> Approve

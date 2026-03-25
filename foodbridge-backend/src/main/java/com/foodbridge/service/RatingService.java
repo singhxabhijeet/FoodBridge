@@ -1,5 +1,6 @@
 package com.foodbridge.service;
 
+import com.foodbridge.model.FoodListing;
 import com.foodbridge.model.Rating;
 import com.foodbridge.model.User;
 import com.foodbridge.repository.RatingRepository;
@@ -25,5 +26,9 @@ public class RatingService {
     public Double getAverageRating(User user) {
         Double avg = ratingRepository.getAverageRatingForUser(user);
         return avg != null ? Math.round(avg * 10.0) / 10.0 : 0.0;
+    }
+
+    public List<Rating> getRatingsForListing(FoodListing listing) {
+        return ratingRepository.findByListing(listing);
     }
 }

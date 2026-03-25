@@ -1,5 +1,6 @@
 package com.foodbridge.repository;
 
+import com.foodbridge.model.FoodListing;
 import com.foodbridge.model.Rating;
 import com.foodbridge.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,6 +14,8 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
     List<Rating> findByRated(User rated);
 
     List<Rating> findByRater(User rater);
+
+    List<Rating> findByListing(FoodListing listing);
 
     @Query("SELECT AVG(r.score) FROM Rating r WHERE r.rated = :user")
     Double getAverageRatingForUser(@Param("user") User user);

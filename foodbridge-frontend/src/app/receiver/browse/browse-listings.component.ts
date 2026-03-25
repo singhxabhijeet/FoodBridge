@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
     selector: 'app-browse-listings',
@@ -10,8 +11,8 @@ import { ApiService } from '../../core/services/api.service';
     template: `
     <div class="page-container">
       <div class="page-header">
-        <h1><i class="fas fa-search"></i> Browse Available Food</h1>
-        <p>Find and claim food near you</p>
+        <h1><i class="fas fa-search"></i> {{ isComposter ? 'Browse Compostable Food' : 'Browse Available Food' }}</h1>
+        <p>{{ isComposter ? 'Find compostable food near you' : 'Find and claim food near you' }}</p>
       </div>
 
       <div class="listings-grid" *ngIf="listings.length > 0">
@@ -33,14 +34,27 @@ import { ApiService } from '../../core/services/api.service';
             <p class="listing-provider"><i class="fas fa-store"></i> {{ l.provider?.fullName }} ({{ l.provider?.organization }})</p>
 
             <div class="claim-section" *ngIf="!l.claimed">
-              <label class="section-label">Schedule Pickup</label>
-              
+              <label class="section-label">Claim This Food</label>
+
+              <!-- Quantity -->
+              <div class="form-group" style="margin-bottom:12px">
+                <label style="font-size:11px;color:#888;text-transform:uppercase">Quantity (max: {{ l.quantity }} {{ l.unit }})</label>
+                <input type="number" class="form-control" [(ngModel)]="l.claimQuantity" [name]="'qty_' + l.id"
+                       [min]="1" [max]="l.quantity" style="max-width:150px">
+                <small class="field-error" *ngIf="l.claimQuantity && l.claimQuantity > l.quantity">
+                  Cannot exceed {{ l.quantity }} {{ l.unit }}
+                </small>
+                <small class="field-error" *ngIf="l.claimQuantity && l.claimQuantity < 1">
+                  Minimum quantity is 1
+                </small>
+              </div>
+
+              <!-- Pickup Date/Time -->
               <div class="pickup-form">
                 <div class="form-group pickup-group">
                   <label>Date</label>
                   <input type="date" class="form-control" [(ngModel)]="l.pickupDate" [name]="'pdate_' + l.id" [min]="todayDate">
                 </div>
-                
                 <div class="form-group pickup-group">
                   <label>Time</label>
                   <div class="time-inputs">
@@ -60,6 +74,14 @@ import { ApiService } from '../../core/services/api.service';
                   </div>
                 </div>
               </div>
+
+              <!-- Time Preview -->
+              <small class="form-hint" *ngIf="l.pickupDate && l.pickupHour && l.pickupMinute" style="margin-bottom:8px">
+                <i class="fas fa-clock"></i> Scheduled: {{ l.pickupDate }} at {{ l.pickupHour }}:{{ l.pickupMinute }} {{ l.pickupPeriod }}
+              </small>
+
+              <!-- Inline Error -->
+              <small class="field-error" *ngIf="l.error" style="margin-bottom:8px">{{ l.error }}</small>
 
               <button class="btn btn-primary btn-sm" style="width:100%" (click)="claim(l)" [disabled]="l.claiming">
                 <i class="fas fa-hand-holding-heart"></i> {{ l.claiming ? 'Claiming...' : 'Claim This Food' }}
@@ -97,6 +119,8 @@ import { ApiService } from '../../core/services/api.service';
     .time-inputs { display: flex; align-items: center; gap: 6px; }
     .time-inputs select { flex: 1; min-width: 0; padding-left: 6px; padding-right: 6px; }
     .colon { font-weight: 700; color: #555; }
+    .field-error { color: #e74c3c; font-size: 11px; display: block; margin-top: 4px; }
+    .form-hint { color: #2ecc71; font-size: 12px; display: block; }
     @media (max-width: 400px) { .pickup-form { grid-template-columns: 1fr; } }
   `]
 })
@@ -105,16 +129,27 @@ export class BrowseListingsComponent implements OnInit {
     hours = ['12', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11'];
     minutes = ['00', '15', '30', '45'];
     todayDate = new Date().toISOString().split('T')[0];
+    isComposter = false;
 
-    constructor(private api: ApiService) { }
+    constructor(private api: ApiService, private auth: AuthService) { }
 
     ngOnInit() {
+        this.isComposter = this.auth.getRole() === 'COMPOST_RECEIVER';
+
         this.api.getApprovedListings().subscribe({
             next: (data) => {
-                this.listings = data.map((l: any) => ({
+                let filtered = data;
+                // Role-based filtering
+                if (this.isComposter) {
+                    filtered = data.filter((l: any) => l.foodType === 'NON_EDIBLE');
+                } else {
+                    filtered = data.filter((l: any) => l.foodType === 'EDIBLE');
+                }
+
+                this.listings = filtered.map((l: any) => ({
                     ...l,
                     pickupDate: '', pickupHour: '', pickupMinute: '', pickupPeriod: 'AM',
-                    claiming: false, claimed: false
+                    claimQuantity: 1, claiming: false, claimed: false, error: ''
                 }));
             },
             error: () => { }
@@ -130,22 +165,39 @@ export class BrowseListingsComponent implements OnInit {
     }
 
     claim(listing: any) {
+        listing.error = '';
+
         if (!listing.pickupDate || !listing.pickupHour || !listing.pickupMinute) {
-            alert('Please select a complete pickup date and time');
+            listing.error = 'Please select a complete pickup date and time';
             return;
         }
+
+        if (!listing.claimQuantity || listing.claimQuantity < 1 || listing.claimQuantity > listing.quantity) {
+            listing.error = 'Please enter a valid quantity (1 to ' + listing.quantity + ')';
+            return;
+        }
+
         const timeStr = this.to24h(listing.pickupHour, listing.pickupMinute, listing.pickupPeriod);
         const pickupTime = `${listing.pickupDate}T${timeStr}`;
+        const pickupDt = new Date(pickupTime);
+        const windowStart = new Date(listing.pickupWindowStart);
+        const windowEnd = new Date(listing.pickupWindowEnd);
+
+        if (pickupDt < windowStart || pickupDt > windowEnd) {
+            listing.error = 'Pickup time must be within the provider\'s window (' +
+                windowStart.toLocaleString() + ' to ' + windowEnd.toLocaleString() + ')';
+            return;
+        }
 
         listing.claiming = true;
-        this.api.claimListing(listing.id, pickupTime).subscribe({
+        this.api.claimListing(listing.id, pickupTime, listing.claimQuantity).subscribe({
             next: () => {
                 listing.claiming = false;
                 listing.claimed = true;
             },
             error: (err: any) => {
                 listing.claiming = false;
-                alert(err.error?.message || 'Failed to claim');
+                listing.error = err.error?.message || 'Failed to claim';
             }
         });
     }
