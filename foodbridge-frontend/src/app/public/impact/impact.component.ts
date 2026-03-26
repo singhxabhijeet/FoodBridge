@@ -22,7 +22,7 @@ import { ImpactStats } from '../../core/models/models';
           </p>
           <div class="hero-btns fade-in-up" style="animation-delay:.3s">
             <a routerLink="/register" class="btn-hero-primary"><i class="fas fa-user-plus"></i> Join the Movement</a>
-            <a href="#how" class="btn-hero-outline"><i class="fas fa-play-circle"></i> See How It Works</a>
+            <a href="#how" class="btn-hero-outline"><i class="fas fa-arrow-down"></i> See How It Works</a>
           </div>
         </div>
         <!-- Decorative food images floating -->
@@ -34,6 +34,9 @@ import { ImpactStats } from '../../core/models/models';
         </div>
         <div class="hero-float hero-float-3">
           <img src="https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=200&h=200&fit=crop" alt="" loading="lazy">
+        </div>
+        <div class="hero-float hero-float-4">
+          <img src="https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=220&h=220&fit=crop" alt="" loading="lazy">
         </div>
       </section>
 
@@ -98,34 +101,49 @@ import { ImpactStats } from '../../core/models/models';
         </div>
       </section>
 
-      <!-- ===== HOW IT WORKS — Step cards with connecting line ===== -->
+      <!-- ===== HOW IT WORKS — Slider with arrows ===== -->
       <section class="how" id="how">
         <div class="how-inner">
           <span class="section-eyebrow center">How FoodBridge Works</span>
-          <h2 class="section-heading">From Surplus to Served in 4 Steps</h2>
+          <h2 class="section-heading">From Surplus to Served</h2>
 
-          <div class="steps-timeline">
-            <div class="step" *ngFor="let step of steps; let i = index">
-              <div class="step-circle fade-in-up" [style.animation-delay]="(i * 0.15) + 's'">{{ i + 1 }}</div>
-              <div class="step-card fade-in-up" [style.animation-delay]="(i * 0.15 + 0.05) + 's'">
-                <i [class]="step.icon" class="step-icon"></i>
-                <h3>{{ step.title }}</h3>
-                <p>{{ step.desc }}</p>
+          <div class="slider-container">
+            <button class="slider-arrow slider-prev" (click)="prevStep()" [disabled]="currentStep === 0">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <div class="slider-viewport">
+              <div class="slider-track" [style.transform]="'translateX(-' + (currentStep * 100) + '%)'">
+                <div class="slide" *ngFor="let step of steps; let i = index">
+                  <div class="slide-number">Step {{ i + 1 }} of {{ steps.length }}</div>
+                  <div class="slide-body">
+                    <div class="slide-visual">
+                      <div class="slide-icon-circle">
+                        <i [class]="step.icon"></i>
+                      </div>
+                      <img [src]="step.img" [alt]="step.title" class="slide-img" loading="lazy">
+                    </div>
+                    <div class="slide-text">
+                      <h3>{{ step.title }}</h3>
+                      <p>{{ step.desc }}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
+
+            <button class="slider-arrow slider-next" (click)="nextStep()" [disabled]="currentStep === steps.length - 1">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <div class="slider-dots">
+            <span *ngFor="let step of steps; let i = index" class="dot" [class.active]="i === currentStep" (click)="currentStep = i"></span>
           </div>
         </div>
       </section>
 
-      <!-- ===== PHOTO MOSAIC ===== -->
-      <section class="mosaic">
-        <div class="mosaic-grid">
-          <img src="https://images.unsplash.com/photo-1504159506876-f8338247a14a?w=600&h=400&fit=crop" alt="Food donation event" loading="lazy">
-          <img src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=400&h=400&fit=crop" alt="Community sharing" loading="lazy">
-          <img src="https://images.unsplash.com/photo-1567521464027-f127ff144326?w=400&h=400&fit=crop" alt="Community kitchen" loading="lazy">
-          <img src="https://images.unsplash.com/photo-1509099836639-18ba4637cd7b?w=600&h=400&fit=crop" alt="Food preparation" loading="lazy">
-        </div>
-      </section>
+
 
       <!-- ===== TESTIMONIALS — Cards on light bg ===== -->
       <section class="testimonials">
@@ -156,7 +174,7 @@ import { ImpactStats } from '../../core/models/models';
           <p>Whether you have surplus food or know someone who needs it — join FoodBridge today.</p>
           <div class="cta-btns">
             <a routerLink="/register" class="btn-hero-primary"><i class="fas fa-user-plus"></i> Create Account</a>
-            <a routerLink="/login" class="btn-hero-outline dark"><i class="fas fa-sign-in-alt"></i> Sign In</a>
+            <a routerLink="/login" class="btn-cta-signin"><i class="fas fa-sign-in-alt"></i> Sign In</a>
           </div>
         </div>
       </section>
@@ -183,11 +201,11 @@ import { ImpactStats } from '../../core/models/models';
             <h4>Contact</h4>
             <p><i class="fas fa-envelope"></i> help&#64;foodbridge.org</p>
             <p><i class="fas fa-phone"></i> +91-98765-43210</p>
-            <p><i class="fas fa-map-marker-alt"></i> Mumbai, India</p>
+            <p><i class="fas fa-map-marker-alt"></i> Pune, India</p>
           </div>
         </div>
         <div class="footer-bottom">
-          &copy; 2024 FoodBridge. Built with &#x2764;&#xFE0F; to fight food waste.
+          &copy; 2026 FoodBridge. Built with &#x2764;&#xFE0F; to fight food waste.
         </div>
       </footer>
     </div>
@@ -238,6 +256,7 @@ import { ImpactStats } from '../../core/models/models';
     .hero-float-1 { width: 180px; height: 180px; top: 12%; left: 5%; animation-delay: 0s; }
     .hero-float-2 { width: 140px; height: 140px; top: 18%; right: 6%; animation-delay: 2s; }
     .hero-float-3 { width: 110px; height: 110px; bottom: 15%; left: 10%; animation-delay: 4s; }
+    .hero-float-4 { width: 150px; height: 150px; bottom: 12%; right: 7%; animation-delay: 1.5s; }
     @keyframes floatBob {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-18px); }
@@ -275,37 +294,46 @@ import { ImpactStats } from '../../core/models/models';
     .metric strong { display: block; font-size: 22px; font-weight: 800; color: #1a1a2e; }
     .metric small { font-size: 12px; color: #888; }
 
-    /* ────── HOW IT WORKS ────── */
+    /* ────── HOW IT WORKS — SLIDER ────── */
     .how { padding: 100px 24px; background: var(--cream); }
-    .how-inner { max-width: 1000px; margin: 0 auto; }
-    .section-heading { text-align: center; font-size: 32px; font-weight: 800; color: #1a1a2e; margin-bottom: 56px; }
-    .steps-timeline { display: grid; grid-template-columns: repeat(4,1fr); gap: 0; position: relative; }
-    .steps-timeline::before {
-      content: ''; position: absolute; top: 28px; left: 8%; right: 8%;
-      height: 3px; background: linear-gradient(90deg, var(--teal), var(--accent));
+    .how-inner { max-width: 900px; margin: 0 auto; }
+    .section-heading { text-align: center; font-size: 32px; font-weight: 800; color: #1a1a2e; margin-bottom: 48px; }
+    .slider-container { display: flex; align-items: center; gap: 16px; }
+    .slider-viewport { flex: 1; overflow: hidden; border-radius: 24px; }
+    .slider-track {
+      display: flex; transition: transform .45s cubic-bezier(.4,0,.2,1);
     }
-    .step { display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; }
-    .step-circle {
-      width: 56px; height: 56px; border-radius: 50%; background: var(--teal); color: white;
-      display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 20px;
-      position: relative; z-index: 2; box-shadow: 0 4px 16px rgba(0,97,85,.35); margin-bottom: 20px;
+    .slide { min-width: 100%; box-sizing: border-box; }
+    .slide-number {
+      text-align: center; font-size: 12px; text-transform: uppercase; letter-spacing: 2px;
+      font-weight: 700; color: var(--teal); margin-bottom: 20px;
     }
-    .step-card {
-      background: white; border-radius: 20px; padding: 28px 20px 24px; box-shadow: 0 6px 24px rgba(0,0,0,.06);
-      width: 100%; max-width: 210px; transition: transform .3s;
+    .slide-body {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center;
+      background: white; border-radius: 24px; padding: 40px; box-shadow: 0 8px 30px rgba(0,0,0,.06);
     }
-    .step-card:hover { transform: translateY(-4px); }
-    .step-icon { font-size: 28px; color: var(--teal); margin-bottom: 12px; }
-    .step-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: #1a1a2e; }
-    .step-card p { font-size: 13px; color: #777; line-height: 1.6; }
-
-    /* ────── PHOTO MOSAIC ────── */
-    .mosaic { padding: 0; }
-    .mosaic-grid {
-      display: grid; grid-template-columns: 2fr 1fr 1fr 2fr; gap: 4px;
+    .slide-visual { position: relative; text-align: center; }
+    .slide-icon-circle {
+      width: 64px; height: 64px; border-radius: 50%; background: var(--teal); color: white;
+      display: flex; align-items: center; justify-content: center; font-size: 26px;
+      position: absolute; top: -18px; left: -18px; z-index: 2; box-shadow: 0 6px 20px rgba(0,97,85,.35);
     }
-    .mosaic-grid img { width: 100%; height: 260px; object-fit: cover; transition: transform .4s; }
-    .mosaic-grid img:hover { transform: scale(1.03); }
+    .slide-img { width: 100%; height: 240px; object-fit: cover; border-radius: 16px; }
+    .slide-text h3 { font-size: 24px; font-weight: 800; color: #1a1a2e; margin-bottom: 14px; }
+    .slide-text p { font-size: 15px; color: #666; line-height: 1.8; }
+    .slider-arrow {
+      width: 48px; height: 48px; border-radius: 50%; border: 2px solid #ccc; background: white;
+      font-size: 18px; color: var(--teal); cursor: pointer; display: flex; align-items: center;
+      justify-content: center; transition: all .25s; flex-shrink: 0;
+    }
+    .slider-arrow:hover:not(:disabled) { border-color: var(--teal); background: var(--teal); color: white; }
+    .slider-arrow:disabled { opacity: .3; cursor: default; }
+    .slider-dots { display: flex; justify-content: center; gap: 10px; margin-top: 24px; }
+    .dot {
+      width: 10px; height: 10px; border-radius: 50%; background: #ccc; cursor: pointer;
+      transition: all .25s;
+    }
+    .dot.active { background: var(--teal); transform: scale(1.3); }
 
     /* ────── TESTIMONIALS ────── */
     .testimonials { padding: 100px 24px; background: white; }
@@ -332,6 +360,12 @@ import { ImpactStats } from '../../core/models/models';
     .cta-inner h2 { font-size: 32px; font-weight: 800; margin-bottom: 16px; }
     .cta-inner p { font-size: 16px; opacity: .8; margin-bottom: 32px; line-height: 1.6; }
     .cta-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .btn-cta-signin {
+      padding: 14px 32px; border-radius: 50px; font-weight: 700; font-size: 15px;
+      background: white; color: var(--teal); text-decoration: none; display: inline-flex;
+      align-items: center; gap: 8px; transition: all .25s; border: none;
+    }
+    .btn-cta-signin:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,.2); }
 
     /* ────── FOOTER ────── */
     .site-footer { background: #0a2e27; color: white; padding: 60px 24px 0; }
@@ -358,9 +392,8 @@ import { ImpactStats } from '../../core/models/models';
       .stats-inner { grid-template-columns: 2fr 2fr; }
       .mission-inner { grid-template-columns: 1fr; }
       .mission-img-badge { right: 12px; bottom: -12px; }
-      .steps-timeline { grid-template-columns: 1fr 1fr; row-gap: 32px; }
-      .steps-timeline::before { display: none; }
-      .mosaic-grid { grid-template-columns: 1fr 1fr; }
+      .slide-body { grid-template-columns: 1fr; }
+      .slide-visual { order: -1; }
       .test-grid { grid-template-columns: 1fr; }
       .footer-grid { grid-template-columns: 1fr; }
     }
@@ -368,9 +401,7 @@ import { ImpactStats } from '../../core/models/models';
       .hero-float { display: none; }
       .stats-inner { grid-template-columns: 1fr 1fr; gap: 16px; }
       .stat-num { font-size: 32px; }
-      .steps-timeline { grid-template-columns: 1fr; }
-      .mosaic-grid { grid-template-columns: 1fr; }
-      .mosaic-grid img { height: 200px; }
+      .slider-arrow { width: 36px; height: 36px; font-size: 14px; }
       .hero-btns { flex-direction: column; align-items: center; }
     }
   `]
@@ -378,12 +409,19 @@ import { ImpactStats } from '../../core/models/models';
 export class ImpactComponent implements OnInit {
     stats: ImpactStats | null = null;
 
+    currentStep = 0;
+
     steps = [
-        { icon: 'fas fa-camera', title: 'Post Surplus', desc: 'Restaurants & corporates list surplus food with photos and safety details.' },
-        { icon: 'fas fa-clipboard-check', title: 'Quality Check', desc: 'Trained checkers verify food safety before listings go live.' },
-        { icon: 'fas fa-hand-holding-heart', title: 'Claim & Pickup', desc: 'Receivers browse, choose their quantity, and pick up at their convenience.' },
-        { icon: 'fas fa-star', title: 'Confirm & Rate', desc: 'Both parties confirm the handover and rate each other for accountability.' }
+        { icon: 'fas fa-user-plus', title: 'Register & Get Verified', desc: 'Sign up as a food provider, receiver, or quality checker. Submit your details and get approved by our admin team to ensure only genuine participants join the platform.', img: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=500&h=300&fit=crop' },
+        { icon: 'fas fa-camera', title: 'Post Surplus Food', desc: 'Restaurants, hotels, and corporates list their surplus food with photos, safety checklist, pickup address, and an expiry window based on perishability level (24h, 48h, or 72h).', img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=500&h=300&fit=crop' },
+        { icon: 'fas fa-clipboard-check', title: 'Quality Check & Approval', desc: 'Trained quality checkers review each listing for safety. Approved listings go live for receivers. Rejected edible food is automatically reclassified as non-edible for composters — nothing gets wasted.', img: 'https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?w=500&h=300&fit=crop' },
+        { icon: 'fas fa-hand-holding-heart', title: 'Browse & Claim', desc: 'Receivers browse available listings filtered by food type. They can claim any custom quantity they need — so if 10 kg is posted and you only need 5, you take 5 and leave the rest for others.', img: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=500&h=300&fit=crop' },
+        { icon: 'fas fa-truck', title: 'Pickup & Confirm', desc: 'The receiver picks up the food within the scheduled window. Both provider and receiver confirm the handover independently, ensuring a transparent and accountable process.', img: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=500&h=300&fit=crop' },
+        { icon: 'fas fa-star', title: 'Rate & Build Trust', desc: 'After every successful pickup, both parties rate each other. Consistent no-shows get flagged, and repeated offenders are restricted — keeping the community reliable and trustworthy.', img: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=500&h=300&fit=crop' }
     ];
+
+    prevStep() { if (this.currentStep > 0) this.currentStep--; }
+    nextStep() { if (this.currentStep < this.steps.length - 1) this.currentStep++; }
 
     testimonials = [
         {
