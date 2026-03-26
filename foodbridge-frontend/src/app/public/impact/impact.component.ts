@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
@@ -10,320 +10,395 @@ import { ImpactStats } from '../../core/models/models';
     imports: [CommonModule, RouterModule],
     template: `
     <div class="impact-page">
-      <!-- Hero Section with Split Layout -->
+
+      <!-- ===== HERO — Full-bleed teal with centered headline ===== -->
       <section class="hero">
-        <div class="hero-inner">
-          <div class="hero-text fade-in-up">
-            <h1>Bridging the Gap Between <span class="highlight">Food Waste</span> and <span class="highlight">Hunger</span></h1>
-            <p class="hero-subtitle">FoodBridge connects food providers with communities in need, reducing waste and feeding people across India.</p>
-            <div class="hero-cta">
-              <a routerLink="/register" class="btn btn-primary btn-lg"><i class="fas fa-user-plus"></i> Get Started</a>
-              <a href="#how" class="btn btn-outline btn-lg"><i class="fas fa-play-circle"></i> How It Works</a>
-            </div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+          <h1 class="hero-title fade-in-up">Save Good Food.<br><span class="hero-accent">Feed Real People.</span></h1>
+          <p class="hero-sub fade-in-up" style="animation-delay:.15s">
+            FoodBridge connects surplus food from restaurants, hotels & corporates with shelters,
+            NGOs and community kitchens — verified for safety, delivered with dignity.
+          </p>
+          <div class="hero-btns fade-in-up" style="animation-delay:.3s">
+            <a routerLink="/register" class="btn-hero-primary"><i class="fas fa-user-plus"></i> Join the Movement</a>
+            <a href="#how" class="btn-hero-outline"><i class="fas fa-play-circle"></i> See How It Works</a>
           </div>
-          <div class="hero-image fade-in-up" style="animation-delay: 0.3s">
-            <img src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=600&h=400&fit=crop" alt="Food sharing community" loading="lazy">
+        </div>
+        <!-- Decorative food images floating -->
+        <div class="hero-float hero-float-1">
+          <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=300&h=300&fit=crop" alt="" loading="lazy">
+        </div>
+        <div class="hero-float hero-float-2">
+          <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=250&h=250&fit=crop" alt="" loading="lazy">
+        </div>
+        <div class="hero-float hero-float-3">
+          <img src="https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=200&h=200&fit=crop" alt="" loading="lazy">
+        </div>
+      </section>
+
+      <!-- ===== IMPACT NUMBERS — Teal band with big bold stats ===== -->
+      <section class="stats-band">
+        <div class="stats-inner">
+          <div class="stat-item fade-in-up" style="animation-delay:.1s">
+            <div class="stat-icon"><i class="fas fa-utensils"></i></div>
+            <div class="stat-num">{{ stats?.totalListingsPosted || 0 }}</div>
+            <div class="stat-label">Listings Posted</div>
+          </div>
+          <div class="stat-item fade-in-up" style="animation-delay:.2s">
+            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-num">{{ stats?.totalFoodApproved || 0 }}</div>
+            <div class="stat-label">Quality Approved</div>
+          </div>
+          <div class="stat-item fade-in-up" style="animation-delay:.3s">
+            <div class="stat-icon"><i class="fas fa-hand-holding-heart"></i></div>
+            <div class="stat-num">{{ stats?.totalFoodClaimed || 0 }}</div>
+            <div class="stat-label">Meals Claimed</div>
+          </div>
+          <div class="stat-item fade-in-up" style="animation-delay:.4s">
+            <div class="stat-icon"><i class="fas fa-handshake"></i></div>
+            <div class="stat-num">{{ stats?.totalFoodConfirmed || 0 }}</div>
+            <div class="stat-label">Pickups Confirmed</div>
           </div>
         </div>
       </section>
 
-      <!-- Animated Stats -->
-      <section class="stats-section">
-        <div class="page-container">
-          <h2 class="section-title">Our Impact in Numbers</h2>
-          <div class="impact-grid">
-            <div class="impact-card card fade-in-up" style="animation-delay: 0.1s">
-              <div class="impact-icon" style="background: linear-gradient(135deg, #2ecc71, #27ae60)">
-                <i class="fas fa-utensils"></i>
-              </div>
-              <div class="impact-number">{{ stats?.totalListingsPosted || 0 }}</div>
-              <div class="impact-label">Total Listings Posted</div>
-            </div>
-            <div class="impact-card card fade-in-up" style="animation-delay: 0.2s">
-              <div class="impact-icon" style="background: linear-gradient(135deg, #3498db, #2980b9)">
-                <i class="fas fa-check-circle"></i>
-              </div>
-              <div class="impact-number">{{ stats?.totalFoodApproved || 0 }}</div>
-              <div class="impact-label">Listings Approved</div>
-            </div>
-            <div class="impact-card card fade-in-up" style="animation-delay: 0.3s">
-              <div class="impact-icon" style="background: linear-gradient(135deg, #e67e22, #f39c12)">
-                <i class="fas fa-hand-holding-heart"></i>
-              </div>
-              <div class="impact-number">{{ stats?.totalFoodClaimed || 0 }}</div>
-              <div class="impact-label">Food Items Claimed</div>
-            </div>
-            <div class="impact-card card fade-in-up" style="animation-delay: 0.4s">
-              <div class="impact-icon" style="background: linear-gradient(135deg, #9b59b6, #8e44ad)">
-                <i class="fas fa-handshake"></i>
-              </div>
-              <div class="impact-number">{{ stats?.totalFoodConfirmed || 0 }}</div>
-              <div class="impact-label">Successful Pickups</div>
+      <!-- ===== OUR MISSION — Split layout with image ===== -->
+      <section class="mission">
+        <div class="mission-inner">
+          <div class="mission-img fade-in-up">
+            <img src="https://images.unsplash.com/photo-1593113598332-cd288d649433?w=600&h=480&fit=crop" alt="Volunteers distributing food" loading="lazy">
+            <div class="mission-img-badge">
+              <span class="badge-num">{{ stats?.mealsProvided || 0 }}</span>
+              <span class="badge-label">Meals Provided</span>
             </div>
           </div>
-        </div>
-      </section>
-
-      <!-- Our Mission -->
-      <section class="mission-section">
-        <div class="page-container">
-          <div class="mission-grid">
-            <div class="mission-image fade-in-up">
-              <img src="https://images.unsplash.com/photo-1593113598332-cd288d649433?w=500&h=400&fit=crop" alt="Volunteers distributing food" loading="lazy">
-            </div>
-            <div class="mission-text fade-in-up" style="animation-delay: 0.2s">
-              <h2>Our Mission</h2>
-              <p>Every day, millions of tons of food go to waste while countless people sleep hungry. FoodBridge was built to solve this paradox.</p>
-              <p>We created a platform where restaurants, hotels, corporates, and caterers can easily share surplus food with NGOs, shelters, and community kitchens — all verified through a built-in quality check system.</p>
-              <div class="mission-stats">
-                <div><strong>{{ stats?.mealsProvided || 0 }}</strong><br><small>Meals Provided</small></div>
-                <div><strong>{{ (stats?.co2Saved || 0) | number:'1.0-0' }} kg</strong><br><small>CO&#8322; Saved</small></div>
-                <div><strong>{{ stats?.totalFoodSaved || 0 }}</strong><br><small>Food Units Saved</small></div>
+          <div class="mission-text fade-in-up" style="animation-delay:.15s">
+            <span class="section-eyebrow">Our Mission</span>
+            <h2>Every Meal Matters</h2>
+            <p>Every day, tonnes of perfectly good food go to waste while families go hungry. FoodBridge was built to close that gap.</p>
+            <p>We created a platform where restaurants, hotels, corporates and caterers can easily share surplus food with NGOs, shelters & community kitchens — all verified through a built-in quality check system.</p>
+            <div class="mission-metrics">
+              <div class="metric">
+                <i class="fas fa-leaf"></i>
+                <div>
+                  <strong>{{ (stats?.co2Saved || 0) | number:'1.0-0' }} kg</strong>
+                  <small>CO&#8322; Prevented</small>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- How It Works -->
-      <section class="how-section" id="how">
-        <div class="page-container">
-          <h2 class="section-title">How FoodBridge Works</h2>
-          <div class="steps-grid">
-            <div class="step-card">
-              <div class="step-number">1</div>
-              <h3>Post Food</h3>
-              <p>Restaurants and corporates list surplus food with photos and safety details.</p>
-            </div>
-            <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
-            <div class="step-card">
-              <div class="step-number">2</div>
-              <h3>Quality Check</h3>
-              <p>Trained quality checkers verify food safety before listings go live.</p>
-            </div>
-            <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
-            <div class="step-card">
-              <div class="step-number">3</div>
-              <h3>Claim & Pickup</h3>
-              <p>Receivers browse, claim food in any quantity, and schedule a convenient pickup time.</p>
-            </div>
-            <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
-            <div class="step-card">
-              <div class="step-number">4</div>
-              <h3>Confirm & Rate</h3>
-              <p>Both parties confirm and rate each other for accountability.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Photo Gallery -->
-      <section class="gallery-section">
-        <div class="page-container">
-          <h2 class="section-title">Making a Difference</h2>
-          <div class="gallery-grid">
-            <img src="https://images.unsplash.com/photo-1504159506876-f8338247a14a?w=400&h=300&fit=crop" alt="Food donation" loading="lazy">
-            <img src="https://images.unsplash.com/photo-1567521464027-f127ff144326?w=400&h=300&fit=crop" alt="Community kitchen" loading="lazy">
-            <img src="https://images.unsplash.com/photo-1509099836639-18ba4637cd7b?w=400&h=300&fit=crop" alt="Volunteers packing food" loading="lazy">
-            <img src="https://images.unsplash.com/photo-1578357078586-491adf1aa5ba?w=400&h=300&fit=crop" alt="Food preparation" loading="lazy">
-          </div>
-        </div>
-      </section>
-
-      <!-- Testimonials -->
-      <section class="testimonials-section">
-        <div class="page-container">
-          <h2 class="section-title">What People Say</h2>
-          <div class="testimonials-grid">
-            <div class="testimonial-card card fade-in-up" style="animation-delay: 0.1s">
-              <div class="testimonial-stars">
-                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-              </div>
-              <p>"FoodBridge has transformed how we handle surplus food. Instead of throwing it away, we now feed over 200 people every week!"</p>
-              <div class="testimonial-author">
-                <div class="author-avatar">R</div>
-                <div><strong>Rajesh Sharma</strong><br><small>Hotel Manager, Mumbai</small></div>
-              </div>
-            </div>
-            <div class="testimonial-card card fade-in-up" style="animation-delay: 0.2s">
-              <div class="testimonial-stars">
-                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-              </div>
-              <p>"As an NGO, finding quality food for our shelter was always a challenge. FoodBridge made it seamless and reliable."</p>
-              <div class="testimonial-author">
-                <div class="author-avatar">P</div>
-                <div><strong>Priya Mehta</strong><br><small>Director, Sunrise Welfare Trust</small></div>
-              </div>
-            </div>
-            <div class="testimonial-card card fade-in-up" style="animation-delay: 0.3s">
-              <div class="testimonial-stars">
-                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
-              </div>
-              <p>"The quality check system gives us confidence that the food is safe. Fantastic initiative for reducing waste!"</p>
-              <div class="testimonial-author">
-                <div class="author-avatar">A</div>
-                <div><strong>Amit Kumar</strong><br><small>Community Kitchen, Delhi</small></div>
+              <div class="metric">
+                <i class="fas fa-recycle"></i>
+                <div>
+                  <strong>{{ stats?.totalFoodSaved || 0 }}</strong>
+                  <small>Food Units Rescued</small>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Footer -->
+      <!-- ===== HOW IT WORKS — Step cards with connecting line ===== -->
+      <section class="how" id="how">
+        <div class="how-inner">
+          <span class="section-eyebrow center">How FoodBridge Works</span>
+          <h2 class="section-heading">From Surplus to Served in 4 Steps</h2>
+
+          <div class="steps-timeline">
+            <div class="step" *ngFor="let step of steps; let i = index">
+              <div class="step-circle fade-in-up" [style.animation-delay]="(i * 0.15) + 's'">{{ i + 1 }}</div>
+              <div class="step-card fade-in-up" [style.animation-delay]="(i * 0.15 + 0.05) + 's'">
+                <i [class]="step.icon" class="step-icon"></i>
+                <h3>{{ step.title }}</h3>
+                <p>{{ step.desc }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== PHOTO MOSAIC ===== -->
+      <section class="mosaic">
+        <div class="mosaic-grid">
+          <img src="https://images.unsplash.com/photo-1504159506876-f8338247a14a?w=600&h=400&fit=crop" alt="Food donation event" loading="lazy">
+          <img src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=400&h=400&fit=crop" alt="Community sharing" loading="lazy">
+          <img src="https://images.unsplash.com/photo-1567521464027-f127ff144326?w=400&h=400&fit=crop" alt="Community kitchen" loading="lazy">
+          <img src="https://images.unsplash.com/photo-1509099836639-18ba4637cd7b?w=600&h=400&fit=crop" alt="Food preparation" loading="lazy">
+        </div>
+      </section>
+
+      <!-- ===== TESTIMONIALS — Cards on light bg ===== -->
+      <section class="testimonials">
+        <div class="test-inner">
+          <span class="section-eyebrow center">What People Say</span>
+          <h2 class="section-heading">Trusted by Those Who Care</h2>
+
+          <div class="test-grid">
+            <div class="test-card fade-in-up" *ngFor="let t of testimonials; let i = index" [style.animation-delay]="(i * 0.12) + 's'">
+              <div class="test-quote"><i class="fas fa-quote-left"></i></div>
+              <p>{{ t.text }}</p>
+              <div class="test-author">
+                <div class="test-avatar" [style.background]="t.color">{{ t.name.charAt(0) }}</div>
+                <div>
+                  <strong>{{ t.name }}</strong>
+                  <small>{{ t.role }}</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== CTA BAND ===== -->
+      <section class="cta-band">
+        <div class="cta-inner fade-in-up">
+          <h2>Ready to Make a Difference?</h2>
+          <p>Whether you have surplus food or know someone who needs it — join FoodBridge today.</p>
+          <div class="cta-btns">
+            <a routerLink="/register" class="btn-hero-primary"><i class="fas fa-user-plus"></i> Create Account</a>
+            <a routerLink="/login" class="btn-hero-outline dark"><i class="fas fa-sign-in-alt"></i> Sign In</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== FOOTER ===== -->
       <footer class="site-footer">
-        <div class="footer-inner">
-          <div class="footer-col brand-col">
-            <h3><i class="fas fa-leaf"></i> FoodBridge</h3>
-            <p>Connecting surplus food with those who need it most. Together, we can end food waste and hunger.</p>
+        <div class="footer-brand">FoodBridge</div>
+        <div class="footer-grid">
+          <div class="footer-col">
+            <p class="footer-tagline">Connecting surplus food with those who need it most. Together, we can end food waste and hunger.</p>
+            <div class="footer-social">
+              <a href="#"><i class="fab fa-twitter"></i></a>
+              <a href="#"><i class="fab fa-instagram"></i></a>
+              <a href="#"><i class="fab fa-linkedin-in"></i></a>
+            </div>
           </div>
           <div class="footer-col">
-            <h4>Quick Links</h4>
+            <h4>Platform</h4>
             <a routerLink="/impact">Home</a>
             <a routerLink="/register">Get Started</a>
             <a routerLink="/login">Login</a>
           </div>
           <div class="footer-col">
-            <h4>Contact Us</h4>
+            <h4>Contact</h4>
             <p><i class="fas fa-envelope"></i> help&#64;foodbridge.org</p>
             <p><i class="fas fa-phone"></i> +91-98765-43210</p>
             <p><i class="fas fa-map-marker-alt"></i> Mumbai, India</p>
           </div>
         </div>
         <div class="footer-bottom">
-          <p>&copy; 2024 FoodBridge. Built with &#x2764; to fight food waste.</p>
+          &copy; 2024 FoodBridge. Built with &#x2764;&#xFE0F; to fight food waste.
         </div>
       </footer>
     </div>
   `,
     styles: [`
-    /* Hero Split Layout */
+    /* ────── Variables ────── */
+    :host { --teal: #006155; --teal-light: #008574; --teal-dark: #004a3f; --cream: #f8f4ef; --accent: #c8e6c9; }
+
+    /* ────── HERO ────── */
     .hero {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-      color: white; padding: 100px 24px 80px; position: relative; overflow: hidden;
+      position: relative; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(160deg, var(--teal-dark) 0%, var(--teal) 40%, var(--teal-light) 100%);
+      overflow: hidden; padding: 100px 24px 80px; text-align: center;
     }
-    .hero::before {
-      content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-      background: radial-gradient(circle at 30% 50%, rgba(46, 204, 113, 0.08) 0%, transparent 50%),
-                  radial-gradient(circle at 70% 50%, rgba(52, 152, 219, 0.08) 0%, transparent 50%);
-      animation: pulse 8s ease-in-out infinite;
+    .hero-overlay {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 120%, rgba(200,230,201,0.12) 0%, transparent 60%);
     }
-    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-    .hero-inner {
-      max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr;
-      gap: 60px; align-items: center; position: relative;
+    .hero-content { position: relative; z-index: 2; max-width: 720px; }
+    .hero-title {
+      font-size: clamp(36px, 6vw, 64px); font-weight: 900; color: white; line-height: 1.1;
+      letter-spacing: -1px; margin-bottom: 24px;
     }
-    .hero h1 { font-size: 44px; font-weight: 800; line-height: 1.2; margin-bottom: 20px; }
-    .highlight {
-      background: linear-gradient(135deg, #2ecc71, #3498db);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    .hero-accent { color: #a5d6a7; }
+    .hero-sub { font-size: 17px; color: rgba(255,255,255,.75); line-height: 1.7; margin-bottom: 36px; max-width: 560px; margin-left: auto; margin-right: auto; }
+    .hero-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .btn-hero-primary {
+      padding: 14px 32px; border-radius: 50px; font-weight: 700; font-size: 15px;
+      background: white; color: var(--teal); text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+      transition: all .25s; box-shadow: 0 4px 20px rgba(0,0,0,.15);
     }
-    .hero-subtitle { font-size: 17px; color: rgba(255, 255, 255, 0.7); line-height: 1.7; margin-bottom: 32px; }
-    .hero-cta { display: flex; gap: 16px; }
-    .btn-outline { border: 2px solid rgba(255,255,255,0.3); color: white; background: transparent; }
-    .btn-outline:hover { border-color: #2ecc71; background: rgba(46,204,113,0.1); }
-    .hero-image img {
-      width: 100%; border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    .btn-hero-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,.2); }
+    .btn-hero-outline {
+      padding: 14px 32px; border-radius: 50px; font-weight: 700; font-size: 15px;
+      background: transparent; color: white; border: 2px solid rgba(255,255,255,.35); text-decoration: none;
+      display: inline-flex; align-items: center; gap: 8px; transition: all .25s;
+    }
+    .btn-hero-outline:hover { border-color: white; background: rgba(255,255,255,.1); }
+    .btn-hero-outline.dark { color: var(--teal); border-color: var(--teal); }
+    .btn-hero-outline.dark:hover { background: rgba(0,97,85,.08); }
+
+    /* Floating food images */
+    .hero-float {
+      position: absolute; z-index: 1; border-radius: 50%; overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,.25); animation: floatBob 6s ease-in-out infinite;
+    }
+    .hero-float img { width: 100%; height: 100%; object-fit: cover; }
+    .hero-float-1 { width: 180px; height: 180px; top: 12%; left: 5%; animation-delay: 0s; }
+    .hero-float-2 { width: 140px; height: 140px; top: 18%; right: 6%; animation-delay: 2s; }
+    .hero-float-3 { width: 110px; height: 110px; bottom: 15%; left: 10%; animation-delay: 4s; }
+    @keyframes floatBob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-18px); }
     }
 
-    /* Stats */
-    .stats-section { padding: 80px 0; background: white; }
-    .section-title { text-align: center; font-size: 32px; font-weight: 800; margin-bottom: 48px; color: #1a1a2e; }
-    .impact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; }
-    .impact-card { text-align: center; padding: 32px 24px; }
-    .impact-icon {
-      width: 60px; height: 60px; border-radius: 16px; display: flex;
-      align-items: center; justify-content: center; margin: 0 auto 16px; color: white; font-size: 24px;
-    }
-    .impact-number { font-size: 36px; font-weight: 800; color: #1a1a2e; margin-bottom: 4px; }
-    .impact-label { font-size: 14px; color: #7f8c8d; font-weight: 500; }
+    /* ────── STATS BAND ────── */
+    .stats-band { background: var(--teal-dark); padding: 56px 24px; }
+    .stats-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(4,1fr); gap: 24px; }
+    .stat-item { text-align: center; color: white; }
+    .stat-icon { font-size: 28px; color: var(--accent); margin-bottom: 12px; }
+    .stat-num { font-size: 42px; font-weight: 900; letter-spacing: -1px; line-height: 1; margin-bottom: 6px; }
+    .stat-label { font-size: 13px; color: rgba(255,255,255,.6); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
 
-    /* Mission */
-    .mission-section { padding: 80px 0; background: #f8f9fa; }
-    .mission-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
-    .mission-image img { width: 100%; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
-    .mission-text h2 { font-size: 32px; font-weight: 800; margin-bottom: 20px; }
+    /* ────── MISSION ────── */
+    .mission { padding: 100px 24px; background: white; }
+    .mission-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+    .mission-img { position: relative; }
+    .mission-img img { width: 100%; border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,.1); }
+    .mission-img-badge {
+      position: absolute; bottom: -20px; right: -20px; background: var(--teal); color: white;
+      border-radius: 16px; padding: 16px 24px; text-align: center; box-shadow: 0 8px 30px rgba(0,97,85,.3);
+    }
+    .badge-num { display: block; font-size: 28px; font-weight: 900; }
+    .badge-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: .8; }
+    .section-eyebrow {
+      display: block; font-size: 12px; text-transform: uppercase; letter-spacing: 3px; font-weight: 700;
+      color: var(--teal); margin-bottom: 12px;
+    }
+    .section-eyebrow.center { text-align: center; }
+    .mission-text h2 { font-size: 36px; font-weight: 800; color: #1a1a2e; margin-bottom: 20px; line-height: 1.2; }
     .mission-text p { font-size: 15px; color: #555; line-height: 1.8; margin-bottom: 16px; }
-    .mission-stats { display: flex; gap: 32px; margin-top: 24px; }
-    .mission-stats div { text-align: center; }
-    .mission-stats strong { font-size: 28px; font-weight: 800; color: #2ecc71; }
-    .mission-stats small { font-size: 12px; color: #888; }
+    .mission-metrics { display: flex; gap: 32px; margin-top: 28px; }
+    .metric { display: flex; align-items: center; gap: 14px; }
+    .metric i { font-size: 28px; color: var(--teal); }
+    .metric strong { display: block; font-size: 22px; font-weight: 800; color: #1a1a2e; }
+    .metric small { font-size: 12px; color: #888; }
 
-    /* How It Works */
-    .how-section { padding: 80px 0; background: white; }
-    .steps-grid { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; }
+    /* ────── HOW IT WORKS ────── */
+    .how { padding: 100px 24px; background: var(--cream); }
+    .how-inner { max-width: 1000px; margin: 0 auto; }
+    .section-heading { text-align: center; font-size: 32px; font-weight: 800; color: #1a1a2e; margin-bottom: 56px; }
+    .steps-timeline { display: grid; grid-template-columns: repeat(4,1fr); gap: 0; position: relative; }
+    .steps-timeline::before {
+      content: ''; position: absolute; top: 28px; left: 8%; right: 8%;
+      height: 3px; background: linear-gradient(90deg, var(--teal), var(--accent));
+    }
+    .step { display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; }
+    .step-circle {
+      width: 56px; height: 56px; border-radius: 50%; background: var(--teal); color: white;
+      display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 20px;
+      position: relative; z-index: 2; box-shadow: 0 4px 16px rgba(0,97,85,.35); margin-bottom: 20px;
+    }
     .step-card {
-      background: white; border-radius: 20px; padding: 32px 24px; text-align: center;
-      width: 200px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); transition: transform 0.3s;
+      background: white; border-radius: 20px; padding: 28px 20px 24px; box-shadow: 0 6px 24px rgba(0,0,0,.06);
+      width: 100%; max-width: 210px; transition: transform .3s;
     }
     .step-card:hover { transform: translateY(-4px); }
-    .step-number {
-      width: 40px; height: 40px; border-radius: 50%;
-      background: linear-gradient(135deg, #2ecc71, #27ae60); color: white;
-      display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; margin: 0 auto 12px;
-    }
-    .step-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
-    .step-card p { font-size: 13px; color: #7f8c8d; line-height: 1.5; }
-    .step-arrow { color: #2ecc71; font-size: 20px; }
+    .step-icon { font-size: 28px; color: var(--teal); margin-bottom: 12px; }
+    .step-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: #1a1a2e; }
+    .step-card p { font-size: 13px; color: #777; line-height: 1.6; }
 
-    /* Gallery */
-    .gallery-section { padding: 80px 0; background: #f8f9fa; }
-    .gallery-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-    .gallery-grid img {
-      width: 100%; height: 200px; object-fit: cover; border-radius: 16px;
-      transition: transform 0.3s; cursor: pointer;
+    /* ────── PHOTO MOSAIC ────── */
+    .mosaic { padding: 0; }
+    .mosaic-grid {
+      display: grid; grid-template-columns: 2fr 1fr 1fr 2fr; gap: 4px;
     }
-    .gallery-grid img:hover { transform: scale(1.03); }
+    .mosaic-grid img { width: 100%; height: 260px; object-fit: cover; transition: transform .4s; }
+    .mosaic-grid img:hover { transform: scale(1.03); }
 
-    /* Testimonials */
-    .testimonials-section { padding: 80px 0; background: white; }
-    .testimonials-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-    .testimonial-card { padding: 32px; }
-    .testimonial-stars { color: #f1c40f; margin-bottom: 16px; font-size: 16px; display: flex; gap: 2px; }
-    .testimonial-card p { font-size: 14px; color: #555; line-height: 1.7; margin-bottom: 20px; font-style: italic; }
-    .testimonial-author { display: flex; align-items: center; gap: 12px; }
-    .author-avatar {
-      width: 40px; height: 40px; border-radius: 50%;
-      background: linear-gradient(135deg, #2ecc71, #3498db); color: white;
-      display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px;
+    /* ────── TESTIMONIALS ────── */
+    .testimonials { padding: 100px 24px; background: white; }
+    .test-inner { max-width: 1100px; margin: 0 auto; }
+    .test-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
+    .test-card {
+      background: #f9fafb; border-radius: 20px; padding: 32px; position: relative;
+      border: 1px solid #eee; transition: box-shadow .3s, transform .3s;
     }
-    .testimonial-author strong { font-size: 14px; }
-    .testimonial-author small { color: #888; font-size: 12px; }
+    .test-card:hover { box-shadow: 0 12px 40px rgba(0,0,0,.08); transform: translateY(-4px); }
+    .test-quote { color: var(--teal); font-size: 24px; margin-bottom: 12px; opacity: .4; }
+    .test-card p { font-size: 14px; color: #555; line-height: 1.75; margin-bottom: 24px; font-style: italic; }
+    .test-author { display: flex; align-items: center; gap: 12px; }
+    .test-avatar {
+      width: 42px; height: 42px; border-radius: 50%; color: white;
+      display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 17px; flex-shrink: 0;
+    }
+    .test-author strong { font-size: 14px; display: block; color: #1a1a2e; }
+    .test-author small { font-size: 12px; color: #888; }
 
-    /* Footer */
-    .site-footer { background: #1a1a2e; color: white; padding: 60px 24px 0; }
-    .footer-inner {
-      max-width: 1100px; margin: 0 auto; display: grid;
-      grid-template-columns: 2fr 1fr 1fr; gap: 40px; padding-bottom: 40px;
+    /* ────── CTA BAND ────── */
+    .cta-band { background: linear-gradient(135deg, var(--teal) 0%, var(--teal-light) 100%); padding: 80px 24px; }
+    .cta-inner { max-width: 640px; margin: 0 auto; text-align: center; color: white; }
+    .cta-inner h2 { font-size: 32px; font-weight: 800; margin-bottom: 16px; }
+    .cta-inner p { font-size: 16px; opacity: .8; margin-bottom: 32px; line-height: 1.6; }
+    .cta-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+    /* ────── FOOTER ────── */
+    .site-footer { background: #0a2e27; color: white; padding: 60px 24px 0; }
+    .footer-brand {
+      font-size: clamp(48px, 8vw, 80px); font-weight: 900; text-align: center;
+      letter-spacing: -2px; margin-bottom: 48px; color: rgba(255,255,255,.12);
     }
-    .brand-col h3 { font-size: 22px; display: flex; align-items: center; gap: 8px; color: #2ecc71; margin-bottom: 12px; }
-    .brand-col p { font-size: 14px; color: rgba(255,255,255,0.5); line-height: 1.7; }
-    .footer-col h4 { font-size: 14px; font-weight: 700; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
-    .footer-col a { display: block; font-size: 14px; color: rgba(255,255,255,0.5); padding: 4px 0; transition: color 0.2s; }
-    .footer-col a:hover { color: #2ecc71; }
-    .footer-col p { font-size: 13px; color: rgba(255,255,255,0.5); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .footer-grid { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px; padding-bottom: 40px; }
+    .footer-tagline { font-size: 14px; color: rgba(255,255,255,.45); line-height: 1.7; margin-bottom: 20px; }
+    .footer-social { display: flex; gap: 16px; }
+    .footer-social a { color: rgba(255,255,255,.35); font-size: 18px; transition: color .2s; }
+    .footer-social a:hover { color: var(--accent); }
+    .footer-col h4 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px; }
+    .footer-col a { display: block; font-size: 14px; color: rgba(255,255,255,.45); padding: 4px 0; text-decoration: none; transition: color .2s; }
+    .footer-col a:hover { color: var(--accent); }
+    .footer-col p { font-size: 13px; color: rgba(255,255,255,.4); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
     .footer-bottom {
-      border-top: 1px solid rgba(255,255,255,0.1); padding: 20px 0; text-align: center;
-      font-size: 13px; color: rgba(255,255,255,0.3);
+      border-top: 1px solid rgba(255,255,255,.08); padding: 20px 0; text-align: center;
+      font-size: 13px; color: rgba(255,255,255,.25);
     }
 
-    @media (max-width: 768px) {
-      .hero-inner { grid-template-columns: 1fr; text-align: center; }
-      .hero-cta { justify-content: center; }
-      .hero-image { display: none; }
-      .hero h1 { font-size: 32px; }
-      .mission-grid { grid-template-columns: 1fr; }
-      .mission-image { display: none; }
-      .step-arrow { display: none; }
-      .steps-grid { flex-direction: column; }
-      .step-card { width: 100%; max-width: 300px; }
-      .gallery-grid { grid-template-columns: 1fr 1fr; }
-      .testimonials-grid { grid-template-columns: 1fr; }
-      .footer-inner { grid-template-columns: 1fr; }
+    /* ────── RESPONSIVE ────── */
+    @media (max-width: 900px) {
+      .stats-inner { grid-template-columns: 2fr 2fr; }
+      .mission-inner { grid-template-columns: 1fr; }
+      .mission-img-badge { right: 12px; bottom: -12px; }
+      .steps-timeline { grid-template-columns: 1fr 1fr; row-gap: 32px; }
+      .steps-timeline::before { display: none; }
+      .mosaic-grid { grid-template-columns: 1fr 1fr; }
+      .test-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .hero-float { display: none; }
+      .stats-inner { grid-template-columns: 1fr 1fr; gap: 16px; }
+      .stat-num { font-size: 32px; }
+      .steps-timeline { grid-template-columns: 1fr; }
+      .mosaic-grid { grid-template-columns: 1fr; }
+      .mosaic-grid img { height: 200px; }
+      .hero-btns { flex-direction: column; align-items: center; }
     }
   `]
 })
 export class ImpactComponent implements OnInit {
     stats: ImpactStats | null = null;
+
+    steps = [
+        { icon: 'fas fa-camera', title: 'Post Surplus', desc: 'Restaurants & corporates list surplus food with photos and safety details.' },
+        { icon: 'fas fa-clipboard-check', title: 'Quality Check', desc: 'Trained checkers verify food safety before listings go live.' },
+        { icon: 'fas fa-hand-holding-heart', title: 'Claim & Pickup', desc: 'Receivers browse, choose their quantity, and pick up at their convenience.' },
+        { icon: 'fas fa-star', title: 'Confirm & Rate', desc: 'Both parties confirm the handover and rate each other for accountability.' }
+    ];
+
+    testimonials = [
+        {
+            text: 'FoodBridge has transformed how we handle surplus food. Instead of throwing it away, we now feed over 200 people every week through verified NGOs!',
+            name: 'Rajesh Sharma', role: 'Hotel Manager, Mumbai', color: 'linear-gradient(135deg, #006155, #00897b)'
+        },
+        {
+            text: 'As an NGO director, finding quality-verified food for our shelter was always a challenge. FoodBridge made it seamless, reliable, and dignified.',
+            name: 'Priya Mehta', role: 'Director, Sunrise Welfare Trust', color: 'linear-gradient(135deg, #e67e22, #f39c12)'
+        },
+        {
+            text: 'The quality check system gives us confidence that every meal is safe. The partial claim feature means we take only what we need — zero waste on our end too!',
+            name: 'Amit Kumar', role: 'Community Kitchen, Delhi', color: 'linear-gradient(135deg, #3498db, #2980b9)'
+        }
+    ];
 
     constructor(private api: ApiService) { }
 

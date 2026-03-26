@@ -82,8 +82,8 @@ import { AuthService } from '../../core/services/auth.service';
             </select>
           </div>
 
-          <!-- Organization -->
-          <div class="form-group">
+          <!-- Organization (hidden for Quality Checker) -->
+          <div class="form-group" *ngIf="form.role !== 'CHECKER'">
             <label>Organization Type *</label>
             <select class="form-control" [(ngModel)]="form.organizationType" name="organizationType"
                     [disabled]="!form.role"
@@ -95,7 +95,7 @@ import { AuthService } from '../../core/services/auth.service';
               <option value="Other">Other (please specify)</option>
             </select>
           </div>
-          <div class="form-group" *ngIf="form.organizationType === 'Other'">
+          <div class="form-group" *ngIf="form.organizationType === 'Other' && form.role !== 'CHECKER'">
             <label>Custom Organization Name *</label>
             <input type="text" class="form-control" [(ngModel)]="form.customOrganization" name="customOrganization"
                    placeholder="e.g., Sunrise Welfare Trust" maxlength="100">
@@ -221,6 +221,7 @@ export class RegisterComponent {
 
     onRoleChange() {
         this.form.organizationType = '';
+        this.form.customOrganization = '';
         switch (this.form.role) {
             case 'PROVIDER':
                 this.orgOptions = ['Restaurant', 'Hotel', 'Corporate Office', 'University/College', 'Catering Service'];
@@ -232,7 +233,8 @@ export class RegisterComponent {
                 this.orgOptions = ['Composting Facility', 'Animal Shelter'];
                 break;
             case 'CHECKER':
-                this.orgOptions = ['Government/Health Agency', 'Independent'];
+                this.orgOptions = [];
+                this.form.organizationType = 'Independent Quality Checker';
                 break;
             default:
                 this.orgOptions = [];

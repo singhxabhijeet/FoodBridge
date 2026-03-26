@@ -87,10 +87,10 @@ import { User } from '../../core/models/models';
               </td>
               <td>{{ u.noShowCount }}</td>
               <td style="text-align:center; position: relative">
-                <button class="action-trigger" (click)="toggleMenu(u)">
+                <button class="action-trigger" (click)="toggleMenu(u, $event)">
                   <i class="fas fa-ellipsis-v"></i>
                 </button>
-                <div class="action-dropdown" *ngIf="u.menuOpen">
+                <div class="action-dropdown" *ngIf="u.menuOpen" [style.top]="u.menuPosition === 'below' ? '100%' : 'auto'" [style.bottom]="u.menuPosition === 'above' ? '100%' : 'auto'">
                   <button *ngIf="!u.approved" (click)="approve(u.id); u.menuOpen=false">
                     <i class="fas fa-check" style="color:#2ecc71"></i> Approve
                   </button>
@@ -155,9 +155,9 @@ import { User } from '../../core/models/models';
     }
     .action-trigger:hover { background: #e0e0e0; }
     .action-dropdown {
-      position: absolute; right: 12px; top: 100%; z-index: 100;
+      position: absolute; right: 44px; z-index: 100;
       background: white; border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.15);
-      min-width: 160px; overflow: hidden;
+      min-width: 170px; overflow: hidden; white-space: nowrap;
     }
     .action-dropdown button {
       display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 16px;
@@ -227,10 +227,32 @@ export class UserManagementComponent implements OnInit {
         this.filteredUsers = users;
     }
 
-    toggleMenu(user: any) {
+    toggleMenu(user: any, event: MouseEvent) {
         const wasOpen = user.menuOpen;
         this.allUsers.forEach((u: any) => u.menuOpen = false);
-        user.menuOpen = !wasOpen;
+        if (!wasOpen) {
+            const btn = event.target as HTMLElement;
+            const rect = btn.getBoundingClientRect();
+            const spaceBelow = window.innerHeight - rect.bottom;
+            user.menuPosition = spaceBelow < 200 ? 'above' : 'below';
+            user.menuOpen = true;
+        }
+    }
+
+    /** Close menu when clicking outside */
+    closeMenus = (e: Event) => {
+        const target = e.target as HTMLElement;
+        if (!target.closest('.action-trigger') && !target.closest('.action-dropdown')) {
+            this.allUsers.forEach((u: any) => u.menuOpen = false);
+        }
+    };
+
+    ngAfterViewInit() {
+        document.addEventListener('click', this.closeMenus);
+    }
+
+    ngOnDestroy() {
+        document.removeEventListener('click', this.closeMenus);
     }
 
     approve(id: number) { this.api.approveUser(id).subscribe({ next: () => this.loadUsers() }); }
