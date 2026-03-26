@@ -14,9 +14,6 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private NotificationService notificationService;
-
     public User getUserByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -46,7 +43,6 @@ public class UserService {
         User user = getUserById(userId);
         user.setApproved(true);
         userRepository.save(user);
-        notificationService.createNotification(user, "Your account has been approved! You can now log in.", "APPROVAL");
         return user;
     }
 
@@ -57,8 +53,6 @@ public class UserService {
         User user = getUserById(userId);
         user.setRestricted(true);
         userRepository.save(user);
-        notificationService.createNotification(user, "Your account has been restricted due to policy violations.",
-                "RESTRICTION");
         return user;
     }
 
