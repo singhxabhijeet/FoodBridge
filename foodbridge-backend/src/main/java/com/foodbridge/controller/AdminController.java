@@ -118,4 +118,33 @@ public class AdminController {
             return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
         }
     }
+
+    /**
+     * Promote a user to SUB_ADMIN — ADMIN only.
+     */
+    @PutMapping("/users/{id}/promote-sub-admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> promoteToSubAdmin(@PathVariable Long id) {
+        try {
+            User user = userService.promoteToSubAdmin(id);
+            return ResponseEntity.ok(new ApiResponse(true, "User promoted to Sub-Admin", user));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
+        }
+    }
+
+    /**
+     * Demote a SUB_ADMIN back to a regular role — ADMIN only.
+     */
+    @PutMapping("/users/{id}/demote-sub-admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> demoteFromSubAdmin(@PathVariable Long id, @RequestParam String role) {
+        try {
+            com.foodbridge.model.enums.Role targetRole = com.foodbridge.model.enums.Role.valueOf(role);
+            User user = userService.demoteFromSubAdmin(id, targetRole);
+            return ResponseEntity.ok(new ApiResponse(true, "User demoted from Sub-Admin", user));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
+        }
+    }
 }

@@ -100,6 +100,12 @@ import { User } from '../../core/models/models';
                   <button *ngIf="u.restricted && isFullAdmin" (click)="unrestrict(u.id); u.menuOpen=false">
                     <i class="fas fa-unlock" style="color:#3498db"></i> Unrestrict
                   </button>
+                  <button *ngIf="isFullAdmin && u.approved && u.role !== 'SUB_ADMIN' && u.role !== 'ADMIN'" (click)="promote(u.id); u.menuOpen=false">
+                    <i class="fas fa-arrow-up" style="color:#8e44ad"></i> Promote to Sub-Admin
+                  </button>
+                  <button *ngIf="isFullAdmin && u.role === 'SUB_ADMIN'" (click)="demote(u); u.menuOpen=false">
+                    <i class="fas fa-arrow-down" style="color:#e67e22"></i> Demote from Sub-Admin
+                  </button>
                   <button *ngIf="isFullAdmin" (click)="confirmDelete(u); u.menuOpen=false" class="danger-item">
                     <i class="fas fa-trash" style="color:#e74c3c"></i> Delete
                   </button>
@@ -258,6 +264,13 @@ export class UserManagementComponent implements OnInit {
     approve(id: number) { this.api.approveUser(id).subscribe({ next: () => this.loadUsers() }); }
     restrict(id: number) { this.api.restrictUser(id).subscribe({ next: () => this.loadUsers() }); }
     unrestrict(id: number) { this.api.unrestrictUser(id).subscribe({ next: () => this.loadUsers() }); }
+    promote(id: number) { this.api.promoteToSubAdmin(id).subscribe({ next: () => this.loadUsers() }); }
+    demote(user: any) {
+        const role = prompt('Demote to which role? (PROVIDER, RECEIVER, CHECKER, COMPOST_RECEIVER)', 'RECEIVER');
+        if (role) {
+            this.api.demoteFromSubAdmin(user.id, role.toUpperCase()).subscribe({ next: () => this.loadUsers() });
+        }
+    }
 
     confirmDelete(user: User) { this.deleteTarget = user; }
     deleteUser() {

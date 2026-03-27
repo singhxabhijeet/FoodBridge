@@ -74,4 +74,35 @@ public class UserService {
         User user = getUserById(userId);
         userRepository.delete(user);
     }
+
+    /**
+     * Promote a user to SUB_ADMIN — ADMIN only.
+     */
+    public User promoteToSubAdmin(Long userId) {
+        User user = getUserById(userId);
+        if (user.getRole() == Role.ADMIN) {
+            throw new RuntimeException("Cannot promote an ADMIN");
+        }
+        if (user.getRole() == Role.SUB_ADMIN) {
+            throw new RuntimeException("User is already a Sub-Admin");
+        }
+        user.setRole(Role.SUB_ADMIN);
+        user.setApproved(true);
+        userRepository.save(user);
+        return user;
+    }
+
+    /**
+     * Demote a SUB_ADMIN back to their previous role — ADMIN only.
+     * Requires the target role to demote to.
+     */
+    public User demoteFromSubAdmin(Long userId, Role targetRole) {
+        User user = getUserById(userId);
+        if (user.getRole() != Role.SUB_ADMIN) {
+            throw new RuntimeException("User is not a Sub-Admin");
+        }
+        user.setRole(targetRole);
+        userRepository.save(user);
+        return user;
+    }
 }

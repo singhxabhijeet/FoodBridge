@@ -128,6 +128,14 @@ export class ApiService {
     }
 
     // ===== User Management =====
+    promoteToSubAdmin(userId: number): Observable<any> {
+        return this.http.put(`${this.apiUrl}/admin/users/${userId}/promote-sub-admin`, {});
+    }
+
+    demoteFromSubAdmin(userId: number, role: string): Observable<any> {
+        return this.http.put(`${this.apiUrl}/admin/users/${userId}/demote-sub-admin?role=${role}`, {});
+    }
+
     deleteUser(userId: number): Observable<any> {
         return this.http.delete(`${this.apiUrl}/admin/users/${userId}`);
     }
